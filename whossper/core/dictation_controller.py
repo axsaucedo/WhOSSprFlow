@@ -133,6 +133,8 @@ class DictationController:
         if self._text_enhancer is None and self.config.enhancement.enabled:
             self._text_enhancer = create_enhancer_from_config(
                 api_key=self.config.enhancement.api_key,
+                api_key_helper=self.config.enhancement.api_key_helper,
+                api_key_env_var=self.config.enhancement.api_key_env_var,
                 api_base_url=self.config.enhancement.api_base_url,
                 model=self.config.enhancement.model,
                 system_prompt_file=self.config.enhancement.system_prompt_file,

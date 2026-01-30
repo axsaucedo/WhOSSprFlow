@@ -1,5 +1,6 @@
 """Tests for text enhancement module."""
 
+import os
 import pytest
 from pathlib import Path
 from unittest.mock import MagicMock, patch
@@ -7,8 +8,75 @@ from unittest.mock import MagicMock, patch
 from whossper.enhancement.openai_enhancer import (
     TextEnhancer,
     create_enhancer_from_config,
+    resolve_api_key,
     DEFAULT_SYSTEM_PROMPT,
 )
+
+
+class TestResolveApiKey:
+    """Tests for API key resolution."""
+    
+    def test_direct_api_key_priority(self):
+        """Direct api_key takes highest priority."""
+        result = resolve_api_key(
+            api_key="direct-key",
+            api_key_helper="echo helper-key",
+            api_key_env_var="TEST_KEY"
+        )
+        assert result == "direct-key"
+    
+    def test_helper_command_priority(self):
+        """api_key_helper takes second priority when api_key is empty."""
+        result = resolve_api_key(
+            api_key="",
+            api_key_helper="echo helper-key",
+            api_key_env_var="TEST_KEY"
+        )
+        assert result == "helper-key"
+    
+    def test_env_var_priority(self):
+        """api_key_env_var takes third priority."""
+        with patch.dict(os.environ, {"MY_API_KEY": "env-key"}):
+            result = resolve_api_key(
+                api_key="",
+                api_key_helper=None,
+                api_key_env_var="MY_API_KEY"
+            )
+            assert result == "env-key"
+    
+    def test_no_key_returns_none(self):
+        """Returns None when no key source provides a value."""
+        result = resolve_api_key(
+            api_key="",
+            api_key_helper=None,
+            api_key_env_var=None
+        )
+        assert result is None
+    
+    def test_helper_command_failure(self):
+        """Failed helper command falls through to env var."""
+        with patch.dict(os.environ, {"FALLBACK_KEY": "fallback-value"}):
+            result = resolve_api_key(
+                api_key="",
+                api_key_helper="false",  # Command that fails
+                api_key_env_var="FALLBACK_KEY"
+            )
+            assert result == "fallback-value"
+    
+    def test_whitespace_trimmed(self):
+        """Whitespace is trimmed from all sources."""
+        result = resolve_api_key(api_key="  trimmed-key  ")
+        assert result == "trimmed-key"
+    
+    def test_empty_env_var_skipped(self):
+        """Empty environment variable is treated as not set."""
+        with patch.dict(os.environ, {"EMPTY_KEY": ""}):
+            result = resolve_api_key(
+                api_key="",
+                api_key_helper=None,
+                api_key_env_var="EMPTY_KEY"
+            )
+            assert result is None
 
 
 class TestTextEnhancerInit:

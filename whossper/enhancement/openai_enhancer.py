@@ -1,6 +1,8 @@
 """Text enhancement using OpenAI-compatible APIs."""
 
 import logging
+import os
+import subprocess
 from pathlib import Path
 from typing import Optional
 
@@ -257,8 +259,68 @@ class TextEnhancer:
             return False
 
 
+def resolve_api_key(
+    api_key: Optional[str] = None,
+    api_key_helper: Optional[str] = None,
+    api_key_env_var: Optional[str] = None,
+) -> Optional[str]:
+    """Resolve API key from various sources with priority.
+    
+    Priority order:
+    1. Direct api_key value (if non-empty)
+    2. api_key_helper command output
+    3. api_key_env_var environment variable
+    
+    Args:
+        api_key: Direct API key value.
+        api_key_helper: Shell command to retrieve API key.
+        api_key_env_var: Environment variable name containing API key.
+        
+    Returns:
+        Resolved API key or None if not found.
+    """
+    # Priority 1: Direct api_key value
+    if api_key and api_key.strip():
+        logger.debug("Using direct api_key value")
+        return api_key.strip()
+    
+    # Priority 2: Run helper command
+    if api_key_helper and api_key_helper.strip():
+        logger.debug(f"Running api_key_helper command: {api_key_helper[:50]}...")
+        try:
+            result = subprocess.run(
+                api_key_helper,
+                shell=True,
+                capture_output=True,
+                text=True,
+                timeout=30,
+            )
+            if result.returncode == 0 and result.stdout.strip():
+                logger.info("API key retrieved from helper command")
+                return result.stdout.strip()
+            else:
+                logger.warning(f"api_key_helper command failed: {result.stderr}")
+        except subprocess.TimeoutExpired:
+            logger.error("api_key_helper command timed out")
+        except Exception as e:
+            logger.error(f"api_key_helper command error: {e}")
+    
+    # Priority 3: Environment variable
+    if api_key_env_var and api_key_env_var.strip():
+        env_value = os.environ.get(api_key_env_var.strip())
+        if env_value and env_value.strip():
+            logger.info(f"API key retrieved from environment variable: {api_key_env_var}")
+            return env_value.strip()
+        else:
+            logger.debug(f"Environment variable {api_key_env_var} not set or empty")
+    
+    return None
+
+
 def create_enhancer_from_config(
-    api_key: str,
+    api_key: Optional[str] = None,
+    api_key_helper: Optional[str] = None,
+    api_key_env_var: Optional[str] = None,
     api_base_url: str = "https://api.openai.com/v1",
     model: str = "gpt-4o-mini",
     system_prompt_file: Optional[str] = None,
@@ -266,22 +328,28 @@ def create_enhancer_from_config(
 ) -> Optional[TextEnhancer]:
     """Create a TextEnhancer from configuration.
     
+    API key is resolved with priority: api_key > api_key_helper > api_key_env_var
+    
     Args:
-        api_key: API key.
+        api_key: Direct API key value.
+        api_key_helper: Shell command to retrieve API key.
+        api_key_env_var: Environment variable name for API key.
         api_base_url: API base URL.
         model: Model name.
         system_prompt_file: Path to prompt file.
         custom_system_prompt: Custom prompt override.
         
     Returns:
-        TextEnhancer instance or None if API key missing.
+        TextEnhancer instance or None if no API key resolved.
     """
-    if not api_key:
-        logger.warning("No API key provided, text enhancement disabled")
+    resolved_key = resolve_api_key(api_key, api_key_helper, api_key_env_var)
+    
+    if not resolved_key:
+        logger.warning("No API key resolved, text enhancement disabled")
         return None
     
     return TextEnhancer(
-        api_key=api_key,
+        api_key=resolved_key,
         api_base_url=api_base_url,
         model=model,
         system_prompt=custom_system_prompt,
