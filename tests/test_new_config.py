@@ -210,14 +210,17 @@ class TestCreateDefaultConfig:
     """Tests for create_default_config function."""
     
     def test_creates_default_config(self, tmp_path):
-        """Test creates valid default config file."""
-        path = create_default_config(str(tmp_path / "default.json"))
+        """Test creates valid default config."""
+        config = create_default_config()
         
-        assert path.exists()
-        
-        # Should be loadable
-        config = load_config(str(path))
+        # Should be a valid Config with defaults
+        assert isinstance(config, Config)
         assert config.whisper.model_size == ModelSize.BASE
+        
+        # Should be saveable
+        path = tmp_path / "default.json"
+        save_config(config, str(path))
+        assert path.exists()
 
 
 class TestFindConfigFile:

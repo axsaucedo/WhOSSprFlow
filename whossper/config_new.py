@@ -162,16 +162,13 @@ def save_config(config: Config, path: str) -> Path:
     return save_path
 
 
-def create_default_config(path: str) -> Path:
-    """Create a default config file.
+def create_default_config() -> Config:
+    """Create a default configuration.
     
-    Args:
-        path: Path to create config at.
-        
     Returns:
-        Path to created file.
+        Default Config instance.
     """
-    return save_config(Config(), path)
+    return Config()
 
 
 # =============================================================================
