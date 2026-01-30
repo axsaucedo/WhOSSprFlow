@@ -1,0 +1,28 @@
+{
+  "whisper": {
+    "model_size": "base",
+    "language": "en",
+    "device": "auto",
+    "model_cache_dir": null
+  },
+  "shortcuts": {
+    "hold_to_dictate": "ctrl+shift",
+    "toggle_dictation": "ctrl+alt+d"
+  },
+  "enhancement": {
+    "enabled": false,
+    "api_base_url": "https://api.openai.com/v1",
+    "api_key": "",
+    "model": "gpt-4o-mini",
+    "system_prompt_file": "prompts/default_enhancement.txt",
+    "custom_system_prompt": null
+  },
+  "audio": {
+    "sample_rate": 16000,
+    "channels": 1,
+    "chunk_size": 1024,
+    "min_recording_duration": 0.5
+  },
+  "tmp_dir": "./tmp",
+  "log_level": "INFO"
+}
