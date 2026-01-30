@@ -237,6 +237,7 @@ class DictationController:
         try:
             # Transcribe
             self._set_state(DictationState.TRANSCRIBING)
+            logger.debug(f"Starting transcription of: {audio_file}")
             transcriber = self._get_transcriber()
             text = transcriber.transcribe_to_text(audio_file)
             
@@ -251,25 +252,29 @@ class DictationController:
             enhancer = self._get_text_enhancer()
             if enhancer:
                 self._set_state(DictationState.ENHANCING)
+                logger.debug("Starting text enhancement")
                 try:
                     text = enhancer.enhance(text)
                     logger.info(f"Enhanced: {text[:100]}...")
                 except Exception as e:
-                    logger.warning(f"Enhancement failed, using raw transcription: {e}")
+                    logger.warning(f"Enhancement failed, using raw transcription: {e}", exc_info=True)
             
             # Insert text
             self._set_state(DictationState.INSERTING)
+            logger.debug(f"Inserting text: {text[:50]}...")
             inserter = self._get_text_inserter()
             inserter.insert_text_with_fallback(text)
+            logger.debug("Text insertion complete")
             
             # Notify callback
             if self.on_transcription:
                 try:
                     self.on_transcription(text)
                 except Exception as e:
-                    logger.error(f"Transcription callback error: {e}")
+                    logger.error(f"Transcription callback error: {e}", exc_info=True)
             
         except Exception as e:
+            logger.exception(f"Processing failed with exception: {e}")
             self._handle_error(f"Processing failed: {e}")
         finally:
             # Clean up audio file

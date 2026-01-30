@@ -4,10 +4,12 @@ Provides centralized logging setup with:
 - Console output (rich formatting when available)
 - File logging with rotation
 - Debug mode with verbose output
+- Exception tracebacks with local variables
 """
 
 import logging
 import sys
+import traceback
 from pathlib import Path
 from typing import Optional
 from datetime import datetime
@@ -15,7 +17,8 @@ from datetime import datetime
 
 # Default log format
 DEFAULT_FORMAT = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
-DEBUG_FORMAT = "%(asctime)s - %(name)s - %(levelname)s - [%(filename)s:%(lineno)d] - %(message)s"
+DEBUG_FORMAT = "%(asctime)s - %(name)s - %(levelname)s - [%(filename)s:%(lineno)d:%(funcName)s] - %(message)s"
+FILE_FORMAT = "%(asctime)s - %(name)s - %(levelname)s - [%(filename)s:%(lineno)d:%(funcName)s] - %(message)s"
 
 # Package logger
 logger = logging.getLogger("whossper")
@@ -74,13 +77,14 @@ def setup_logging(
     console_handler.setLevel(level)
     root_logger.addHandler(console_handler)
     
-    # File handler
+    # File handler - always use verbose format for file logging
     if log_file:
         log_path = Path(log_file)
         log_path.parent.mkdir(parents=True, exist_ok=True)
         
+        file_formatter = logging.Formatter(FILE_FORMAT)
         file_handler = logging.FileHandler(log_path, mode='a', encoding='utf-8')
-        file_handler.setFormatter(formatter)
+        file_handler.setFormatter(file_formatter)
         file_handler.setLevel(level)
         root_logger.addHandler(file_handler)
         
@@ -120,3 +124,15 @@ def get_logger(name: str) -> logging.Logger:
         Logger instance.
     """
     return logging.getLogger(name)
+
+
+def log_exception(logger: logging.Logger, message: str, exc: Exception) -> None:
+    """Log an exception with full traceback and context.
+    
+    Args:
+        logger: Logger instance to use.
+        message: Context message for the exception.
+        exc: The exception to log.
+    """
+    logger.error(f"{message}: {type(exc).__name__}: {exc}")
+    logger.debug("Full traceback:\n" + traceback.format_exc())
