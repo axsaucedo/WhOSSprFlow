@@ -93,6 +93,30 @@ class TestEnhancementConfig:
         assert config.api_base_url == "http://localhost:8080/v1"
         assert config.api_key == "test-key"
         assert config.model == "gpt-4"
+    
+    def test_api_key_helper_default_none(self):
+        """Test api_key_helper is None by default."""
+        config = EnhancementConfig()
+        assert config.api_key_helper is None
+    
+    def test_api_key_env_var_default_none(self):
+        """Test api_key_env_var is None by default."""
+        config = EnhancementConfig()
+        assert config.api_key_env_var is None
+    
+    def test_api_key_helper_setting(self):
+        """Test setting api_key_helper."""
+        config = EnhancementConfig(
+            api_key_helper="op read op://vault/openai/key"
+        )
+        assert config.api_key_helper == "op read op://vault/openai/key"
+    
+    def test_api_key_env_var_setting(self):
+        """Test setting api_key_env_var."""
+        config = EnhancementConfig(
+            api_key_env_var="MY_OPENAI_KEY"
+        )
+        assert config.api_key_env_var == "MY_OPENAI_KEY"
 
 
 class TestAudioConfig:

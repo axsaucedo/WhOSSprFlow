@@ -76,7 +76,15 @@ class EnhancementConfig(BaseModel):
     )
     api_key: str = Field(
         default="",
-        description="API key for authentication"
+        description="API key for authentication (highest priority)"
+    )
+    api_key_helper: Optional[str] = Field(
+        default=None,
+        description="Shell command to retrieve API key (e.g., 'op read op://vault/openai/key'). Used if api_key is empty."
+    )
+    api_key_env_var: Optional[str] = Field(
+        default=None,
+        description="Environment variable name containing API key (e.g., 'OPENAI_API_KEY'). Used if api_key and api_key_helper are empty."
     )
     model: str = Field(
         default="gpt-4o-mini",

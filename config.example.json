@@ -13,6 +13,8 @@
     "enabled": false,
     "api_base_url": "https://api.openai.com/v1",
     "api_key": "",
+    "api_key_helper": null,
+    "api_key_env_var": null,
     "model": "gpt-4o-mini",
     "system_prompt_file": "prompts/default_enhancement.txt",
     "custom_system_prompt": null
