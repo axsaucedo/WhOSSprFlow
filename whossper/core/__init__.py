@@ -1,5 +1,5 @@
 """Core dictation controller module."""
 
-from .dictation_controller import DictationController
+from .dictation_controller import DictationController, DictationState
 
-__all__ = ["DictationController"]
+__all__ = ["DictationController", "DictationState"]
