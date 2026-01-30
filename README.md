@@ -47,8 +47,8 @@ Copy `config.example.json` to `whossper.json` and customize:
     "device": "auto"
   },
   "shortcuts": {
-    "hold_to_dictate": "ctrl+shift",
-    "toggle_dictation": "ctrl+alt+d"
+    "hold_to_dictate": "ctrl+cmd+1",
+    "toggle_dictation": "ctrl+cmd+2"
   },
   "enhancement": {
     "enabled": false,

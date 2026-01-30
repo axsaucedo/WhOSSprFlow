@@ -115,8 +115,8 @@ Edit `whossper.json`:
     "device": "auto"
   },
   "shortcuts": {
-    "hold_to_dictate": "ctrl+shift",
-    "toggle_dictation": "ctrl+alt+d"
+    "hold_to_dictate": "ctrl+cmd+1",
+    "toggle_dictation": "ctrl+cmd+2"
   },
   "enhancement": {
     "enabled": false,
@@ -176,20 +176,20 @@ Default shortcuts (configurable):
 
 | Shortcut | Action |
 |----------|--------|
-| `Ctrl+Shift` (hold) | Hold to record, release to transcribe |
-| `Ctrl+Alt+D` | Toggle dictation on/off |
+| `Ctrl+Cmd+1` (hold) | Hold to record, release to transcribe |
+| `Ctrl+Cmd+2` | Toggle dictation on/off |
 
 ### Using Dictation
 
 1. **Hold-to-Dictate Mode:**
-   - Press and hold `Ctrl+Shift`
+   - Press and hold `Ctrl+Cmd+1`
    - Speak into your microphone
    - Release the keys to transcribe and insert text
 
 2. **Toggle Mode:**
-   - Press `Ctrl+Alt+D` to start recording
+   - Press `Ctrl+Cmd+2` to start recording
    - Speak into your microphone
-   - Press `Ctrl+Alt+D` again to stop and insert text
+   - Press `Ctrl+Cmd+2` again to stop and insert text
 
 ### Stopping the Service
 

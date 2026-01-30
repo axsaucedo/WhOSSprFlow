@@ -55,11 +55,11 @@ class WhisperConfig(BaseModel):
 class ShortcutsConfig(BaseModel):
     """Keyboard shortcuts configuration."""
     hold_to_dictate: str = Field(
-        default="ctrl+shift",
+        default="ctrl+cmd+1",
         description="Key combination to hold for dictation"
     )
     toggle_dictation: str = Field(
-        default="ctrl+alt+d",
+        default="ctrl+cmd+2",
         description="Key combination to toggle dictation on/off"
     )
 
@@ -139,8 +139,8 @@ class WhossperConfig(BaseModel):
                         "device": "auto"
                     },
                     "shortcuts": {
-                        "hold_to_dictate": "ctrl+shift",
-                        "toggle_dictation": "ctrl+alt+d"
+                        "hold_to_dictate": "ctrl+cmd+1",
+                        "toggle_dictation": "ctrl+cmd+2"
                     },
                     "enhancement": {
                         "enabled": False,

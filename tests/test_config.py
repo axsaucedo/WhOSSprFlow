@@ -55,8 +55,8 @@ class TestShortcutsConfig:
     def test_default_values(self):
         """Test default shortcut values."""
         config = ShortcutsConfig()
-        assert config.hold_to_dictate == "ctrl+shift"
-        assert config.toggle_dictation == "ctrl+alt+d"
+        assert config.hold_to_dictate == "ctrl+cmd+1"
+        assert config.toggle_dictation == "ctrl+cmd+2"
     
     def test_custom_shortcuts(self):
         """Test setting custom shortcuts."""
