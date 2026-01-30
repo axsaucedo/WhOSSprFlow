@@ -3,6 +3,7 @@ name = "whossper"
 version = "0.1.0"
 description = "WhOSSper Flow - Open Source Speech-to-Text for macOS"
 readme = "README.md"
+license = "Apache-2.0"
 requires-python = ">=3.12"
 dependencies = [
     "openai-whisper>=20240930",
