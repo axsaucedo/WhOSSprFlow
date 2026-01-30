@@ -20,13 +20,13 @@ class ConfigManager:
         Path.home() / ".config" / "whossper" / "config.json",
     ]
     
-    def __init__(self, config_path: Optional[Path] = None):
+    def __init__(self, config_path: Optional[str] = None):
         """Initialize config manager.
         
         Args:
             config_path: Optional explicit path to config file.
         """
-        self.config_path = config_path
+        self.config_path: Optional[Path] = Path(config_path) if config_path else None
         self._config: Optional[WhossperConfig] = None
     
     def _find_config_file(self) -> Optional[Path]:

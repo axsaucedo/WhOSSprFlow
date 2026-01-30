@@ -14,6 +14,7 @@ class PermissionStatus(str, Enum):
     GRANTED = "granted"
     DENIED = "denied"
     UNKNOWN = "unknown"
+    NOT_DETERMINED = "not_determined"
     NOT_APPLICABLE = "not_applicable"
 
 
