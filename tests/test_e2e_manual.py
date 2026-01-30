@@ -5,21 +5,24 @@ These tests require user interaction and cannot be automated.
 They validate real-world usage scenarios with actual audio input.
 
 Run with: python tests/test_e2e_manual.py
-Or: pytest tests/test_e2e_manual.py -v -s
+Or: pytest tests/test_e2e_manual.py -v -s --manual
 
 Each test will prompt you for input and verify results.
 """
 
+import os
 import sys
 import time
 import threading
 from typing import Optional
 
+import pytest
+
 # Add project root to path
 sys.path.insert(0, str(__file__).replace("/tests/test_e2e_manual.py", ""))
 
-from whossper.config_new import Config, load_config
-from whossper.core_new import (
+from whossper.config import Config, load_config
+from whossper.core import (
     AudioRecorder,
     Transcriber,
     DictationController,
@@ -27,6 +30,18 @@ from whossper.core_new import (
     check_permissions,
     PermissionStatus,
 )
+
+
+# Skip all tests in this module unless --manual is passed or run directly
+_RUN_MANUAL = os.environ.get("WHOSSPER_MANUAL_TESTS") == "1"
+
+
+def skip_unless_manual():
+    """Decorator to skip manual tests unless explicitly enabled."""
+    return pytest.mark.skipif(
+        not _RUN_MANUAL and "pytest" in sys.modules,
+        reason="Manual test: set WHOSSPER_MANUAL_TESTS=1 or run directly with python"
+    )
 
 
 # =============================================================================
@@ -63,6 +78,7 @@ def wait_for_key(message: str = "Press Enter to continue...") -> None:
 # Permission Tests
 # =============================================================================
 
+@skip_unless_manual()
 def test_permissions() -> bool:
     """Test that required permissions are granted.
     
@@ -96,6 +112,7 @@ def test_permissions() -> bool:
 # Audio Recording Tests
 # =============================================================================
 
+@skip_unless_manual()
 def test_audio_recording() -> bool:
     """Test audio recording with sounddevice.
     
@@ -150,6 +167,7 @@ def test_audio_recording() -> bool:
 # Transcription Tests
 # =============================================================================
 
+@skip_unless_manual()
 def test_transcription() -> bool:
     """Test Whisper transcription.
     
@@ -212,6 +230,7 @@ def test_transcription() -> bool:
 # Full Dictation Flow Tests
 # =============================================================================
 
+@skip_unless_manual()
 def test_hold_to_dictate() -> bool:
     """Test hold-to-dictate flow.
     
@@ -285,6 +304,7 @@ def test_hold_to_dictate() -> bool:
     return prompt_user("Did the hold-to-dictate work correctly?")
 
 
+@skip_unless_manual()
 def test_toggle_dictation() -> bool:
     """Test toggle dictation flow.
     

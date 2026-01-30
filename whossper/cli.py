@@ -1,14 +1,11 @@
 """WhOSSper Flow CLI application.
 
-Provides commands for:
-- start: Start the dictation service
-- config: Show/edit configuration
-- check: Check permissions
+Simplified CLI using Typer for the speech-to-text service.
 """
 
-import json
-import sys
+import logging
 import signal
+import sys
 import threading
 import time
 import traceback
@@ -19,30 +16,44 @@ import typer
 from rich.console import Console
 from rich.table import Table
 from rich.panel import Panel
-from rich.text import Text
 
 from whossper import __version__
-from whossper.config.manager import ConfigManager
-from whossper.config.schema import WhossperConfig, WhisperModelSize, DeviceType
-from whossper.core.dictation_controller import DictationController, DictationState
-from whossper.permissions.mac_permissions import PermissionsManager, PermissionStatus
-from whossper.logging_config import get_logger
+from whossper.config import (
+    Config, ModelSize, DeviceType,
+    load_config, save_config, create_default_config,
+)
+from whossper.core import (
+    DictationState,
+    DictationController,
+    check_permissions,
+    PermissionStatus,
+)
+from whossper.enhancer import create_enhancer
 
-logger = get_logger(__name__)
 
-
-# Global thread exception handler
+# Thread exception handler
 def thread_exception_handler(args):
     """Handle uncaught exceptions in threads."""
     print(f"THREAD EXCEPTION: {args.exc_type.__name__}: {args.exc_value}", file=sys.stderr, flush=True)
     traceback.print_exception(args.exc_type, args.exc_value, args.exc_tb, file=sys.stderr)
-    sys.stderr.flush()
 
-# Install the global thread exception handler
 threading.excepthook = thread_exception_handler
 
 
-# Create Typer app
+# Setup logging
+def setup_logging(debug: bool = False) -> None:
+    """Configure logging."""
+    level = logging.DEBUG if debug else logging.INFO
+    logging.basicConfig(
+        level=level,
+        format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
+        datefmt="%H:%M:%S",
+    )
+
+logger = logging.getLogger(__name__)
+
+
+# Create app
 app = typer.Typer(
     name="whossper",
     help="WhOSSper Flow - Open source speech-to-text for macOS",
@@ -65,9 +76,7 @@ def version_callback(value: bool) -> None:
 @app.callback()
 def main(
     version: bool = typer.Option(
-        False,
-        "--version",
-        "-v",
+        False, "--version", "-v",
         callback=version_callback,
         is_eager=True,
         help="Show version and exit.",
@@ -80,65 +89,45 @@ def main(
 @app.command()
 def start(
     config_file: Optional[Path] = typer.Option(
-        None,
-        "--config",
-        "-c",
+        None, "--config", "-c",
         help="Path to configuration file.",
     ),
     model: Optional[str] = typer.Option(
-        None,
-        "--model",
-        "-m",
+        None, "--model", "-m",
         help="Whisper model size (tiny, base, small, medium, large, turbo).",
     ),
     language: Optional[str] = typer.Option(
-        None,
-        "--language",
-        "-l",
-        help="Language code for transcription (e.g., 'en', 'es', 'fr').",
+        None, "--language", "-l",
+        help="Language code for transcription (e.g., 'en', 'es').",
     ),
     device: Optional[str] = typer.Option(
-        None,
-        "--device",
-        "-d",
+        None, "--device", "-d",
         help="Device to use (auto, cpu, mps, cuda).",
     ),
     enhancement: bool = typer.Option(
-        False,
-        "--enhancement/--no-enhancement",
-        "-e/-E",
+        False, "--enhancement/--no-enhancement", "-e/-E",
         help="Enable/disable text enhancement via API.",
     ),
     api_key: Optional[str] = typer.Option(
-        None,
-        "--api-key",
+        None, "--api-key",
         help="API key for text enhancement.",
         envvar="OPENAI_API_KEY",
     ),
     hold_shortcut: Optional[str] = typer.Option(
-        None,
-        "--hold-shortcut",
+        None, "--hold-shortcut",
         help="Hold-to-dictate keyboard shortcut (e.g., 'ctrl+cmd+1').",
     ),
     toggle_shortcut: Optional[str] = typer.Option(
-        None,
-        "--toggle-shortcut",
+        None, "--toggle-shortcut",
         help="Toggle dictation keyboard shortcut (e.g., 'ctrl+cmd+2').",
     ),
     skip_permission_check: bool = typer.Option(
-        False,
-        "--skip-permission-check",
+        False, "--skip-permission-check",
         help="Skip permission checks (not recommended).",
     ),
     debug: bool = typer.Option(
-        False,
-        "--debug",
-        help="Enable debug logging with verbose output.",
-    ),
-    log_file: Optional[Path] = typer.Option(
-        None,
-        "--log-file",
-        help="Path to log file. If not specified, logs go to stderr only.",
+        False, "--debug",
+        help="Enable debug logging.",
     ),
 ) -> None:
     """Start the WhOSSper dictation service.
@@ -150,38 +139,19 @@ def start(
     """
     global _controller
     
-    # Setup logging FIRST before any other operations
-    from whossper.logging_config import setup_logging, get_default_log_file
-    
-    log_path = str(log_file) if log_file else None
-    if debug and not log_path:
-        # In debug mode, auto-create log file if not specified
-        log_path = get_default_log_file("./tmp/logs")
-    
-    setup_logging(debug=debug, log_file=log_path)
-    
-    import logging
-    logger = logging.getLogger("whossper.cli")
+    setup_logging(debug)
     logger.info(f"WhOSSper Flow v{__version__} starting...")
-    if log_path:
-        console.print(f"[dim]Logging to: {log_path}[/dim]")
     
     # Load configuration
-    if config_file:
-        manager = ConfigManager(str(config_file))
-    else:
-        manager = ConfigManager()
-    
-    config = manager.load()
-    logger.debug(f"Loaded config: {config}")
+    config = load_config(str(config_file) if config_file else None)
     
     # Apply command-line overrides
     if model:
         try:
-            config.whisper.model_size = WhisperModelSize(model)
+            config.whisper.model_size = ModelSize(model)
         except ValueError:
-            console.print(f"[red]Invalid model size: {model}[/red]")
-            console.print(f"Valid options: {', '.join(m.value for m in WhisperModelSize)}")
+            console.print(f"[red]Invalid model: {model}[/red]")
+            console.print(f"Valid: {', '.join(m.value for m in ModelSize)}")
             raise typer.Exit(1)
     
     if language:
@@ -192,7 +162,6 @@ def start(
             config.whisper.device = DeviceType(device)
         except ValueError:
             console.print(f"[red]Invalid device: {device}[/red]")
-            console.print(f"Valid options: {', '.join(d.value for d in DeviceType)}")
             raise typer.Exit(1)
     
     if enhancement:
@@ -200,8 +169,7 @@ def start(
     
     if api_key:
         config.enhancement.api_key = api_key
-        if not config.enhancement.enabled:
-            config.enhancement.enabled = True
+        config.enhancement.enabled = True
     
     if hold_shortcut:
         config.shortcuts.hold_to_dictate = hold_shortcut
@@ -211,30 +179,22 @@ def start(
     
     # Check permissions
     if not skip_permission_check:
-        perms = PermissionsManager()
-        perms_status = perms.check_all_permissions()
+        perms = check_permissions()
+        denied = [k for k, v in perms.items() if v != PermissionStatus.GRANTED]
         
-        all_granted = all(
-            status == PermissionStatus.GRANTED
-            for status in perms_status.values()
-        )
-        
-        if not all_granted:
-            console.print("\n[yellow]⚠️  Missing permissions detected:[/yellow]\n")
-            
-            for perm, status in perms_status.items():
-                if status != PermissionStatus.GRANTED:
-                    color = "yellow" if status == PermissionStatus.UNKNOWN else "red"
-                    console.print(f"  [{color}]• {perm}: {status.value}[/{color}]")
+        if denied:
+            console.print("\n[yellow]⚠️  Missing permissions:[/yellow]")
+            for p in denied:
+                console.print(f"  [red]• {p}[/red]")
             
             console.print("\nRun [cyan]whossper check[/cyan] for instructions.")
             
             if not typer.confirm("\nContinue anyway?", default=False):
                 raise typer.Exit(1)
     
-    # Set up state change callback
-    def on_state_change(state: DictationState) -> None:
-        state_icons = {
+    # State change callback
+    def on_state(state: DictationState) -> None:
+        icons = {
             DictationState.IDLE: "⏸️",
             DictationState.RECORDING: "🎤",
             DictationState.TRANSCRIBING: "⏳",
@@ -242,24 +202,40 @@ def start(
             DictationState.INSERTING: "📝",
             DictationState.ERROR: "❌",
         }
-        icon = state_icons.get(state, "")
-        console.print(f"\r{icon} State: [cyan]{state.value}[/cyan]", end="")
+        console.print(f"\r{icons.get(state, '')} State: [cyan]{state.value}[/cyan]", end="")
     
-    def on_transcription(text: str) -> None:
+    def on_text(text: str) -> None:
         console.print(f"\n[green]Transcribed:[/green] {text}")
     
     def on_error(error: str) -> None:
         console.print(f"\n[red]Error:[/red] {error}")
     
+    # Create enhancer if enabled
+    enhancer = None
+    if config.enhancement.enabled:
+        enhancer = create_enhancer(
+            api_key=config.enhancement.api_key,
+            api_key_helper=config.enhancement.api_key_helper,
+            api_key_env_var=config.enhancement.api_key_env_var,
+            base_url=config.enhancement.api_base_url,
+            model=config.enhancement.model,
+            prompt_file=config.enhancement.system_prompt_file,
+        )
+        if enhancer:
+            logger.info("Text enhancement enabled")
+        else:
+            console.print("[yellow]Warning: Enhancement enabled but no API key found[/yellow]")
+    
     # Create controller
     _controller = DictationController(
         config,
-        on_state_change=on_state_change,
-        on_transcription=on_transcription,
+        on_state=on_state,
+        on_text=on_text,
         on_error=on_error,
+        enhancer=enhancer,
     )
     
-    # Set up signal handler for graceful shutdown
+    # Signal handler
     def signal_handler(sig, frame):
         console.print("\n\n[yellow]Shutting down...[/yellow]")
         if _controller:
@@ -288,17 +264,9 @@ def start(
         console.print("[red]Failed to start dictation service.[/red]")
         raise typer.Exit(1)
     
-    # Keep running - use a loop instead of signal.pause() to allow listener recovery
+    # Keep running
     try:
-        listener = _controller._keyboard_listener
         while True:
-            # Check if keyboard listener is still alive and restart if needed
-            if listener and not listener.is_alive:
-                logger.warning("Keyboard listener died, restarting...")
-                if listener.restart():
-                    logger.info("Keyboard listener restarted successfully")
-                else:
-                    logger.error("Failed to restart keyboard listener")
             time.sleep(0.5)
     except KeyboardInterrupt:
         console.print("\n\n[yellow]Shutting down...[/yellow]")
@@ -313,170 +281,89 @@ def check() -> None:
     
     Shows the status of required macOS permissions:
     - Microphone access (for recording audio)
-    - Accessibility access (for injecting text into applications)
+    - Accessibility access (for injecting text)
     """
     console.print(Panel.fit(
         "[bold]Permission Check[/bold]",
         title="WhOSSper Flow",
     ))
     
-    perms = PermissionsManager()
-    perms_status = perms.check_all_permissions()
+    perms = check_permissions()
     
     table = Table(title="Required Permissions")
     table.add_column("Permission", style="cyan")
     table.add_column("Status", justify="center")
     table.add_column("Description")
     
-    status_colors = {
+    status_map = {
         PermissionStatus.GRANTED: ("✅ Granted", "green"),
         PermissionStatus.DENIED: ("❌ Denied", "red"),
-        PermissionStatus.NOT_DETERMINED: ("❓ Not asked", "yellow"),
         PermissionStatus.UNKNOWN: ("❓ Unknown", "yellow"),
     }
     
-    descriptions = {
+    descs = {
         "microphone": "Required to record audio for transcription",
         "accessibility": "Required to inject text into applications",
     }
     
-    for perm, status in perms_status.items():
-        status_text, color = status_colors.get(status, ("Unknown", "white"))
-        desc = descriptions.get(perm, "")
-        table.add_row(perm.capitalize(), f"[{color}]{status_text}[/{color}]", desc)
+    for perm, status in perms.items():
+        text, color = status_map.get(status, ("Unknown", "white"))
+        table.add_row(perm.capitalize(), f"[{color}]{text}[/{color}]", descs.get(perm, ""))
     
     console.print(table)
     
-    # Show instructions for denied permissions
-    denied = [p for p, s in perms_status.items() if s != PermissionStatus.GRANTED]
+    denied = [p for p, s in perms.items() if s != PermissionStatus.GRANTED]
     
     if denied:
-        console.print("\n[yellow]To grant permissions:[/yellow]\n")
-        
-        instructions = perms.get_permission_instructions()
-        for perm, instruction in instructions.items():
-            if perm in denied:
-                console.print(f"[bold]{perm.capitalize()}:[/bold]")
-                console.print(f"  {instruction}\n")
-        
-        # Offer to open System Preferences
-        if typer.confirm("Open System Preferences to grant permissions?", default=True):
-            if "microphone" in denied:
-                perms.request_microphone_permission()
-            if "accessibility" in denied:
-                perms.open_accessibility_preferences()
+        console.print("\n[yellow]To grant permissions:[/yellow]")
+        if "microphone" in denied:
+            console.print("[bold]Microphone:[/bold] System Preferences → Security & Privacy → Privacy → Microphone")
+        if "accessibility" in denied:
+            console.print("[bold]Accessibility:[/bold] System Preferences → Security & Privacy → Privacy → Accessibility")
     else:
         console.print("\n[green]✅ All permissions granted![/green]")
 
 
 @app.command()
 def config(
-    show: bool = typer.Option(
-        False,
-        "--show",
-        "-s",
-        help="Show current configuration.",
-    ),
-    init: bool = typer.Option(
-        False,
-        "--init",
-        "-i",
-        help="Create a new config file with defaults.",
-    ),
-    path: Optional[Path] = typer.Option(
-        None,
-        "--path",
-        "-p",
-        help="Path to config file (for --init or --show).",
-    ),
-    set_model: Optional[str] = typer.Option(
-        None,
-        "--model",
-        help="Set Whisper model size.",
-    ),
-    set_language: Optional[str] = typer.Option(
-        None,
-        "--language",
-        help="Set language for transcription.",
-    ),
-    set_enhancement: Optional[bool] = typer.Option(
-        None,
-        "--enhancement/--no-enhancement",
-        help="Enable/disable text enhancement.",
-    ),
+    show: bool = typer.Option(False, "--show", "-s", help="Show current configuration."),
+    init: bool = typer.Option(False, "--init", "-i", help="Create a new config file."),
+    path: Optional[Path] = typer.Option(None, "--path", "-p", help="Path to config file."),
 ) -> None:
-    """Show or modify configuration.
+    """Show or create configuration.
     
     Without options, shows the current configuration.
     Use --init to create a new config file with defaults.
     """
-    config_path = str(path) if path else None
-    manager = ConfigManager(config_path)
-    
     if init:
-        # Create new config with defaults
         out_path = path or Path("whossper.json")
-        cfg = WhossperConfig()
-        manager = ConfigManager(str(out_path))
-        manager.save(cfg)
+        cfg = create_default_config()
+        save_config(cfg, str(out_path))
         console.print(f"[green]Created config file:[/green] {out_path}")
         return
     
-    # Load existing config
-    cfg = manager.load()
+    cfg = load_config(str(path) if path else None)
     
-    # Apply modifications
-    modified = False
+    table = Table(title="Current Configuration")
+    table.add_column("Setting", style="cyan")
+    table.add_column("Value")
     
-    if set_model:
-        try:
-            cfg.whisper.model_size = WhisperModelSize(set_model)
-            modified = True
-        except ValueError:
-            console.print(f"[red]Invalid model: {set_model}[/red]")
-            raise typer.Exit(1)
+    table.add_row("Whisper Model", cfg.whisper.model_size.value)
+    table.add_row("Language", cfg.whisper.language or "auto")
+    table.add_row("Device", cfg.whisper.device.value)
+    table.add_row("Enhancement", "enabled" if cfg.enhancement.enabled else "disabled")
+    table.add_row("API Base URL", cfg.enhancement.api_base_url)
+    table.add_row("Hold Shortcut", cfg.shortcuts.hold_to_dictate)
+    table.add_row("Toggle Shortcut", cfg.shortcuts.toggle_dictation)
+    table.add_row("Sample Rate", str(cfg.audio.sample_rate))
+    table.add_row("Tmp Directory", cfg.tmp_dir)
     
-    if set_language:
-        cfg.whisper.language = set_language
-        modified = True
-    
-    if set_enhancement is not None:
-        cfg.enhancement.enabled = set_enhancement
-        modified = True
-    
-    if modified:
-        manager.save(cfg)
-        console.print("[green]Configuration updated.[/green]")
-    
-    if show or not modified:
-        # Display config
-        table = Table(title="Current Configuration")
-        table.add_column("Setting", style="cyan")
-        table.add_column("Value")
-        
-        table.add_row("Whisper Model", cfg.whisper.model_size.value)
-        table.add_row("Language", cfg.whisper.language or "auto")
-        table.add_row("Device", cfg.whisper.device.value)
-        table.add_row("Enhancement", "enabled" if cfg.enhancement.enabled else "disabled")
-        table.add_row("API Base URL", cfg.enhancement.api_base_url)
-        table.add_row("Hold Shortcut", cfg.shortcuts.hold_to_dictate)
-        table.add_row("Toggle Shortcut", cfg.shortcuts.toggle_dictation)
-        table.add_row("Sample Rate", str(cfg.audio.sample_rate))
-        table.add_row("Tmp Directory", cfg.tmp_dir)
-        
-        console.print(table)
-        
-        # Show config file location
-        if manager.config_path and Path(manager.config_path).exists():
-            console.print(f"\n[dim]Config file: {manager.config_path}[/dim]")
+    console.print(table)
 
 
 @app.command()
 def models() -> None:
-    """List available Whisper models.
-    
-    Shows all available model sizes and their approximate memory requirements.
-    """
+    """List available Whisper models."""
     table = Table(title="Available Whisper Models")
     table.add_column("Model", style="cyan")
     table.add_column("Parameters")
@@ -484,7 +371,7 @@ def models() -> None:
     table.add_column("Multilingual", justify="center")
     table.add_column("~VRAM")
     
-    models_info = [
+    info = [
         ("tiny", "39M", "✅", "✅", "~1 GB"),
         ("base", "74M", "✅", "✅", "~1 GB"),
         ("small", "244M", "✅", "✅", "~2 GB"),
@@ -495,8 +382,8 @@ def models() -> None:
         ("turbo", "809M", "❌", "✅", "~6 GB"),
     ]
     
-    for model, params, en, multi, vram in models_info:
-        table.add_row(model, params, en, multi, vram)
+    for m, params, en, multi, vram in info:
+        table.add_row(m, params, en, multi, vram)
     
     console.print(table)
     console.print("\n[dim]Note: Smaller models are faster but less accurate.[/dim]")

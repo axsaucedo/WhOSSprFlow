@@ -23,7 +23,7 @@ import pyperclip
 from pynput import keyboard
 from pynput.keyboard import Key, KeyCode, Controller
 
-from whossper.config_new import Config, ModelSize, DeviceType
+from whossper.config import Config, ModelSize, DeviceType
 
 
 logger = logging.getLogger(__name__)

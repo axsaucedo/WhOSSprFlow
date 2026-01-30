@@ -1,153 +1,134 @@
-"""Tests for configuration schema and manager."""
+"""Tests for simplified configuration module."""
 
 import json
 import pytest
 from pathlib import Path
 
-from whossper.config.schema import (
-    WhossperConfig,
+from whossper.config import (
+    Config,
     WhisperConfig,
     ShortcutsConfig,
     EnhancementConfig,
     AudioConfig,
-    WhisperModelSize,
+    ModelSize,
     DeviceType,
+    load_config,
+    save_config,
+    create_default_config,
+    find_config_file,
 )
-from whossper.config.manager import ConfigManager
+
+
+class TestModelSize:
+    """Tests for ModelSize enum."""
+    
+    def test_has_expected_values(self):
+        """Test enum has all expected model sizes."""
+        assert ModelSize.TINY.value == "tiny"
+        assert ModelSize.BASE.value == "base"
+        assert ModelSize.SMALL.value == "small"
+        assert ModelSize.MEDIUM.value == "medium"
+        assert ModelSize.LARGE.value == "large"
+        assert ModelSize.TURBO.value == "turbo"
+    
+    def test_from_string(self):
+        """Test creating from string."""
+        assert ModelSize("base") == ModelSize.BASE
+        assert ModelSize("turbo") == ModelSize.TURBO
+
+
+class TestDeviceType:
+    """Tests for DeviceType enum."""
+    
+    def test_has_expected_values(self):
+        """Test enum has all expected device types."""
+        assert DeviceType.AUTO.value == "auto"
+        assert DeviceType.CPU.value == "cpu"
+        assert DeviceType.MPS.value == "mps"
+        assert DeviceType.CUDA.value == "cuda"
 
 
 class TestWhisperConfig:
-    """Tests for WhisperConfig schema."""
+    """Tests for WhisperConfig."""
     
-    def test_default_values(self):
-        """Test default configuration values."""
+    def test_defaults(self):
+        """Test default values."""
         config = WhisperConfig()
-        assert config.model_size == WhisperModelSize.BASE
+        assert config.model_size == ModelSize.BASE
         assert config.language == "en"
         assert config.device == DeviceType.AUTO
         assert config.model_cache_dir is None
     
     def test_custom_values(self):
-        """Test setting custom configuration values."""
+        """Test custom values."""
         config = WhisperConfig(
-            model_size=WhisperModelSize.LARGE,
+            model_size=ModelSize.LARGE,
             language="es",
             device=DeviceType.MPS
         )
-        assert config.model_size == WhisperModelSize.LARGE
+        assert config.model_size == ModelSize.LARGE
         assert config.language == "es"
         assert config.device == DeviceType.MPS
-    
-    def test_model_size_enum(self):
-        """Test all model size enum values."""
-        sizes = [e.value for e in WhisperModelSize]
-        assert "tiny" in sizes
-        assert "base" in sizes
-        assert "small" in sizes
-        assert "medium" in sizes
-        assert "large" in sizes
-        assert "turbo" in sizes
 
 
 class TestShortcutsConfig:
-    """Tests for ShortcutsConfig schema."""
+    """Tests for ShortcutsConfig."""
     
-    def test_default_values(self):
-        """Test default shortcut values."""
+    def test_defaults(self):
+        """Test default shortcuts."""
         config = ShortcutsConfig()
         assert config.hold_to_dictate == "ctrl+cmd+1"
         assert config.toggle_dictation == "ctrl+cmd+2"
     
     def test_custom_shortcuts(self):
-        """Test setting custom shortcuts."""
+        """Test custom shortcuts."""
         config = ShortcutsConfig(
             hold_to_dictate="cmd+space",
-            toggle_dictation="cmd+alt+r"
+            toggle_dictation="cmd+d"
         )
         assert config.hold_to_dictate == "cmd+space"
-        assert config.toggle_dictation == "cmd+alt+r"
+        assert config.toggle_dictation == "cmd+d"
 
 
 class TestEnhancementConfig:
-    """Tests for EnhancementConfig schema."""
+    """Tests for EnhancementConfig."""
     
-    def test_default_disabled(self):
+    def test_disabled_by_default(self):
         """Test enhancement is disabled by default."""
         config = EnhancementConfig()
         assert config.enabled is False
     
-    def test_default_api_url(self):
-        """Test default API URL."""
+    def test_default_api_settings(self):
+        """Test default API settings."""
         config = EnhancementConfig()
         assert config.api_base_url == "https://api.openai.com/v1"
+        assert config.model == "gpt-4o-mini"
     
-    def test_custom_api_settings(self):
-        """Test custom API settings."""
-        config = EnhancementConfig(
-            enabled=True,
-            api_base_url="http://localhost:8080/v1",
-            api_key="test-key",
-            model="gpt-4"
-        )
-        assert config.enabled is True
-        assert config.api_base_url == "http://localhost:8080/v1"
-        assert config.api_key == "test-key"
-        assert config.model == "gpt-4"
-    
-    def test_api_key_helper_default_none(self):
-        """Test api_key_helper is None by default."""
+    def test_api_key_sources(self):
+        """Test API key source fields exist."""
         config = EnhancementConfig()
+        assert config.api_key == ""
         assert config.api_key_helper is None
-    
-    def test_api_key_env_var_default_none(self):
-        """Test api_key_env_var is None by default."""
-        config = EnhancementConfig()
         assert config.api_key_env_var is None
-    
-    def test_api_key_helper_setting(self):
-        """Test setting api_key_helper."""
-        config = EnhancementConfig(
-            api_key_helper="op read op://vault/openai/key"
-        )
-        assert config.api_key_helper == "op read op://vault/openai/key"
-    
-    def test_api_key_env_var_setting(self):
-        """Test setting api_key_env_var."""
-        config = EnhancementConfig(
-            api_key_env_var="MY_OPENAI_KEY"
-        )
-        assert config.api_key_env_var == "MY_OPENAI_KEY"
 
 
 class TestAudioConfig:
-    """Tests for AudioConfig schema."""
+    """Tests for AudioConfig."""
     
-    def test_default_values(self):
-        """Test default audio configuration."""
+    def test_defaults(self):
+        """Test default audio settings."""
         config = AudioConfig()
         assert config.sample_rate == 16000
         assert config.channels == 1
-        assert config.chunk_size == 1024
-        assert config.min_recording_duration == 0.5
-    
-    def test_custom_values(self):
-        """Test custom audio configuration."""
-        config = AudioConfig(
-            sample_rate=44100,
-            channels=2,
-            chunk_size=2048
-        )
-        assert config.sample_rate == 44100
-        assert config.channels == 2
-        assert config.chunk_size == 2048
+        assert config.min_duration == 0.5
 
 
-class TestWhossperConfig:
-    """Tests for main WhossperConfig schema."""
+class TestConfig:
+    """Tests for main Config."""
     
-    def test_default_config(self):
-        """Test default complete configuration."""
-        config = WhossperConfig()
+    def test_defaults(self):
+        """Test default config has all sections."""
+        config = Config()
         assert isinstance(config.whisper, WhisperConfig)
         assert isinstance(config.shortcuts, ShortcutsConfig)
         assert isinstance(config.enhancement, EnhancementConfig)
@@ -155,102 +136,105 @@ class TestWhossperConfig:
         assert config.tmp_dir == "./tmp"
         assert config.log_level == "INFO"
     
-    def test_json_serialization(self):
-        """Test configuration can be serialized to JSON."""
-        config = WhossperConfig()
-        data = config.model_dump()
-        
-        assert "whisper" in data
-        assert "shortcuts" in data
-        assert "enhancement" in data
-        assert "audio" in data
-        
-        # Verify it's JSON serializable
-        json_str = json.dumps(data)
-        assert json_str is not None
-    
-    def test_json_deserialization(self, sample_config_data):
-        """Test configuration can be loaded from JSON data."""
-        config = WhossperConfig.model_validate(sample_config_data)
-        
-        assert config.whisper.model_size == WhisperModelSize.BASE
-        assert config.whisper.language == "en"
-        assert config.shortcuts.hold_to_dictate == "ctrl+shift"
-        assert config.enhancement.enabled is False
-
-
-class TestConfigManager:
-    """Tests for ConfigManager."""
-    
-    def test_load_default_when_no_file(self, tmp_dir):
-        """Test loading default config when no file exists."""
-        manager = ConfigManager(config_path=tmp_dir / "nonexistent.json")
-        config = manager.load()
-        
-        assert isinstance(config, WhossperConfig)
-        assert config.whisper.model_size == WhisperModelSize.BASE
-    
-    def test_load_from_file(self, config_file):
-        """Test loading config from file."""
-        manager = ConfigManager(config_path=config_file)
-        config = manager.load()
-        
-        assert isinstance(config, WhossperConfig)
-        assert config.whisper.language == "en"
-    
-    def test_save_config(self, tmp_dir):
-        """Test saving configuration to file."""
-        manager = ConfigManager()
-        config = WhossperConfig(
-            whisper=WhisperConfig(model_size=WhisperModelSize.SMALL)
+    def test_json_roundtrip(self):
+        """Test config can be serialized and deserialized."""
+        config = Config(
+            whisper=WhisperConfig(model_size=ModelSize.SMALL),
+            tmp_dir="/tmp/test"
         )
         
-        save_path = tmp_dir / "saved_config.json"
-        result = manager.save(config, save_path)
+        # Serialize
+        data = config.model_dump()
+        json_str = json.dumps(data)
         
-        assert result == save_path
-        assert save_path.exists()
+        # Deserialize
+        loaded_data = json.loads(json_str)
+        loaded_config = Config.model_validate(loaded_data)
         
-        # Verify saved content
-        with open(save_path) as f:
+        assert loaded_config.whisper.model_size == ModelSize.SMALL
+        assert loaded_config.tmp_dir == "/tmp/test"
+
+
+class TestLoadConfig:
+    """Tests for load_config function."""
+    
+    def test_returns_defaults_when_no_file(self, tmp_path):
+        """Test returns defaults when no config file exists."""
+        config = load_config(str(tmp_path / "nonexistent.json"))
+        assert isinstance(config, Config)
+        assert config.whisper.model_size == ModelSize.BASE
+    
+    def test_loads_from_file(self, tmp_path):
+        """Test loads config from file."""
+        config_file = tmp_path / "config.json"
+        config_file.write_text(json.dumps({
+            "whisper": {"model_size": "small", "language": "es"}
+        }))
+        
+        config = load_config(str(config_file))
+        assert config.whisper.model_size == ModelSize.SMALL
+        assert config.whisper.language == "es"
+    
+    def test_handles_invalid_json(self, tmp_path):
+        """Test handles invalid JSON gracefully."""
+        config_file = tmp_path / "bad.json"
+        config_file.write_text("not valid json {")
+        
+        config = load_config(str(config_file))
+        assert isinstance(config, Config)  # Falls back to defaults
+
+
+class TestSaveConfig:
+    """Tests for save_config function."""
+    
+    def test_saves_to_file(self, tmp_path):
+        """Test saves config to file."""
+        config = Config(whisper=WhisperConfig(model_size=ModelSize.TURBO))
+        path = save_config(config, str(tmp_path / "out.json"))
+        
+        assert path.exists()
+        
+        # Verify content
+        with open(path) as f:
             data = json.load(f)
-        assert data["whisper"]["model_size"] == "small"
+        assert data["whisper"]["model_size"] == "turbo"
     
-    def test_get_config_lazy_load(self, config_file):
-        """Test get_config lazily loads configuration."""
-        manager = ConfigManager(config_path=config_file)
-        
-        # First call should load
-        config1 = manager.get_config()
-        assert config1 is not None
-        
-        # Second call should return cached
-        config2 = manager.get_config()
-        assert config1 is config2
+    def test_creates_parent_directories(self, tmp_path):
+        """Test creates parent directories."""
+        path = tmp_path / "subdir" / "deep" / "config.json"
+        save_config(Config(), str(path))
+        assert path.exists()
+
+
+class TestCreateDefaultConfig:
+    """Tests for create_default_config function."""
     
-    def test_create_default_config_file(self, tmp_dir):
-        """Test creating a default config file."""
-        config_path = tmp_dir / "new_config.json"
-        result = ConfigManager.create_default_config_file(config_path)
+    def test_creates_default_config(self, tmp_path):
+        """Test creates valid default config."""
+        config = create_default_config()
         
-        assert result == config_path
-        assert config_path.exists()
+        # Should be a valid Config with defaults
+        assert isinstance(config, Config)
+        assert config.whisper.model_size == ModelSize.BASE
         
-        # Verify it's valid JSON with expected structure
-        with open(config_path) as f:
-            data = json.load(f)
-        assert "whisper" in data
-        assert "shortcuts" in data
+        # Should be saveable
+        path = tmp_path / "default.json"
+        save_config(config, str(path))
+        assert path.exists()
+
+
+class TestFindConfigFile:
+    """Tests for find_config_file function."""
     
-    def test_load_invalid_json(self, tmp_dir):
-        """Test loading falls back to defaults on invalid JSON."""
-        invalid_config = tmp_dir / "invalid.json"
-        with open(invalid_config, "w") as f:
-            f.write("not valid json {")
+    def test_finds_explicit_path(self, tmp_path):
+        """Test finds explicit path when it exists."""
+        config_file = tmp_path / "my_config.json"
+        config_file.write_text("{}")
         
-        manager = ConfigManager(config_path=invalid_config)
-        config = manager.load()
-        
-        # Should fall back to defaults
-        assert isinstance(config, WhossperConfig)
-        assert config.whisper.model_size == WhisperModelSize.BASE
+        result = find_config_file(str(config_file))
+        assert result == config_file
+    
+    def test_returns_none_for_nonexistent(self, tmp_path):
+        """Test returns None for nonexistent explicit path."""
+        result = find_config_file(str(tmp_path / "nonexistent.json"))
+        assert result is None
