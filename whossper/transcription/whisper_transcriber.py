@@ -146,8 +146,6 @@ class WhisperTranscriber:
             FileNotFoundError: If audio file doesn't exist.
             ValueError: If audio file is invalid.
         """
-        import sys
-        
         audio_path = Path(audio_path)
         
         if not audio_path.exists():
@@ -158,13 +156,8 @@ class WhisperTranscriber:
         logger.info(f"Transcribing {audio_path} with language={lang}")
         logger.debug(f"Audio file size: {audio_path.stat().st_size} bytes")
         
-        # Flush to ensure logs are written before potential crash
-        sys.stdout.flush()
-        sys.stderr.flush()
-        
         try:
             logger.debug("Calling whisper model.transcribe()...")
-            print(f"DEBUG: About to call model.transcribe() on {audio_path}", file=sys.stderr, flush=True)
             
             result = self.model.transcribe(
                 str(audio_path),
@@ -174,7 +167,6 @@ class WhisperTranscriber:
                 **kwargs
             )
             
-            print(f"DEBUG: model.transcribe() completed successfully", file=sys.stderr, flush=True)
             logger.debug(f"Whisper transcribe() returned successfully")
             
             text = result.get('text', '')
@@ -183,7 +175,6 @@ class WhisperTranscriber:
             return result
             
         except Exception as e:
-            print(f"DEBUG: model.transcribe() raised exception: {type(e).__name__}: {e}", file=sys.stderr, flush=True)
             logger.exception(f"Transcription failed with exception: {type(e).__name__}: {e}")
             raise
     

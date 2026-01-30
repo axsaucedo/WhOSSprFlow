@@ -391,9 +391,12 @@ class DictationController:
             logger.warning("Not all permissions granted")
             logger.info(self._permissions_manager.get_permission_instructions())
         
-        # Pre-load the Whisper model
+        # Pre-load the Whisper model (actually load it, not just create transcriber)
         logger.info("Pre-loading Whisper model...")
-        self._get_transcriber()
+        transcriber = self._get_transcriber()
+        # Force model loading by accessing the model property
+        _ = transcriber.model
+        logger.info("Whisper model pre-loaded successfully")
         
         # Setup shortcuts
         self.setup_shortcuts()
@@ -440,6 +443,7 @@ class DictationController:
         """Run the dictation service until interrupted.
         
         This blocks the main thread and handles keyboard shortcuts.
+        It monitors the keyboard listener and restarts it if it stops unexpectedly.
         """
         if not self.start():
             raise RuntimeError("Failed to start dictation service")
@@ -447,6 +451,14 @@ class DictationController:
         try:
             logger.info("Dictation service running. Press Ctrl+C to stop.")
             while True:
+                # Check if listener is still alive
+                listener = self._keyboard_listener
+                if listener and not listener.is_alive:
+                    logger.warning("Keyboard listener died unexpectedly, restarting...")
+                    if not listener.restart():
+                        logger.error("Failed to restart keyboard listener")
+                        # Re-register shortcuts
+                        self.setup_shortcuts()
                 time.sleep(0.1)
         except KeyboardInterrupt:
             logger.info("Interrupted by user")

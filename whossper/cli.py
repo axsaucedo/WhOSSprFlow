@@ -10,6 +10,7 @@ import json
 import sys
 import signal
 import threading
+import time
 import traceback
 from pathlib import Path
 from typing import Optional
@@ -25,6 +26,9 @@ from whossper.config.manager import ConfigManager
 from whossper.config.schema import WhossperConfig, WhisperModelSize, DeviceType
 from whossper.core.dictation_controller import DictationController, DictationState
 from whossper.permissions.mac_permissions import PermissionsManager, PermissionStatus
+from whossper.logging_config import get_logger
+
+logger = get_logger(__name__)
 
 
 # Global thread exception handler
@@ -284,14 +288,23 @@ def start(
         console.print("[red]Failed to start dictation service.[/red]")
         raise typer.Exit(1)
     
-    # Keep running
+    # Keep running - use a loop instead of signal.pause() to allow listener recovery
     try:
-        signal.pause()
-    except AttributeError:
-        # Windows fallback
-        import time
+        listener = _controller._keyboard_listener
         while True:
-            time.sleep(1)
+            # Check if keyboard listener is still alive and restart if needed
+            if listener and not listener.is_alive:
+                logger.warning("Keyboard listener died, restarting...")
+                if listener.restart():
+                    logger.info("Keyboard listener restarted successfully")
+                else:
+                    logger.error("Failed to restart keyboard listener")
+            time.sleep(0.5)
+    except KeyboardInterrupt:
+        console.print("\n\n[yellow]Shutting down...[/yellow]")
+    finally:
+        if _controller:
+            _controller.stop()
 
 
 @app.command()

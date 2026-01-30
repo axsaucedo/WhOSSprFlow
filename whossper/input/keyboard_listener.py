@@ -333,6 +333,35 @@ class KeyboardListener:
         """Check if listener is running."""
         return self._running
     
+    @property
+    def is_alive(self) -> bool:
+        """Check if the underlying listener thread is alive."""
+        return self._listener is not None and self._listener.is_alive()
+    
+    def wait(self, timeout: float = None) -> bool:
+        """Wait for the listener thread to complete.
+        
+        Args:
+            timeout: Maximum time to wait in seconds.
+            
+        Returns:
+            True if listener stopped normally, False if still running.
+        """
+        if self._listener:
+            self._listener.join(timeout=timeout)
+            return not self._listener.is_alive()
+        return True
+    
+    def restart(self) -> bool:
+        """Restart the keyboard listener.
+        
+        Returns:
+            True if restarted successfully.
+        """
+        logger.info("Restarting keyboard listener...")
+        self.stop()
+        return self.start()
+    
     def __enter__(self):
         """Context manager entry."""
         self.start()
