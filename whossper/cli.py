@@ -9,6 +9,8 @@ Provides commands for:
 import json
 import sys
 import signal
+import threading
+import traceback
 from pathlib import Path
 from typing import Optional
 
@@ -23,6 +25,18 @@ from whossper.config.manager import ConfigManager
 from whossper.config.schema import WhossperConfig, WhisperModelSize, DeviceType
 from whossper.core.dictation_controller import DictationController, DictationState
 from whossper.permissions.mac_permissions import PermissionsManager, PermissionStatus
+
+
+# Global thread exception handler
+def thread_exception_handler(args):
+    """Handle uncaught exceptions in threads."""
+    print(f"THREAD EXCEPTION: {args.exc_type.__name__}: {args.exc_value}", file=sys.stderr, flush=True)
+    traceback.print_exception(args.exc_type, args.exc_value, args.exc_tb, file=sys.stderr)
+    sys.stderr.flush()
+
+# Install the global thread exception handler
+threading.excepthook = thread_exception_handler
+
 
 # Create Typer app
 app = typer.Typer(

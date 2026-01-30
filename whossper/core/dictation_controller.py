@@ -188,10 +188,20 @@ class DictationController:
             )
             
             if audio_file:
-                # Process in background thread
+                # Process in background thread with exception handling
+                def thread_wrapper():
+                    """Wrapper to catch any unhandled exceptions in thread."""
+                    import sys
+                    import traceback
+                    try:
+                        self._process_audio(audio_file)
+                    except Exception as e:
+                        print(f"FATAL: Unhandled exception in processing thread: {type(e).__name__}: {e}", file=sys.stderr, flush=True)
+                        traceback.print_exc(file=sys.stderr)
+                        sys.stderr.flush()
+                
                 self._processing_thread = threading.Thread(
-                    target=self._process_audio,
-                    args=(audio_file,),
+                    target=thread_wrapper,
                     daemon=True
                 )
                 self._processing_thread.start()
@@ -236,12 +246,23 @@ class DictationController:
         Args:
             audio_file: Path to recorded audio file.
         """
+        import sys
+        import traceback
+        
+        logger.debug(f"_process_audio() started for: {audio_file}")
+        
         try:
             # Transcribe
             self._set_state(DictationState.TRANSCRIBING)
             logger.debug(f"Starting transcription of: {audio_file}")
+            
+            logger.debug("Getting transcriber...")
             transcriber = self._get_transcriber()
+            logger.debug(f"Transcriber obtained: {transcriber}")
+            
+            logger.debug("Calling transcribe_to_text()...")
             text = transcriber.transcribe_to_text(audio_file)
+            logger.debug(f"transcribe_to_text() returned: '{text}'")
             
             if not text:
                 logger.warning("Empty transcription")
@@ -263,22 +284,40 @@ class DictationController:
             
             # Insert text
             self._set_state(DictationState.INSERTING)
-            logger.debug(f"Inserting text: {text[:50]}...")
+            logger.debug(f"Inserting text: '{text}'")
+            
+            logger.debug("Getting text inserter...")
             inserter = self._get_text_inserter()
-            inserter.insert_text_with_fallback(text)
-            logger.debug("Text insertion complete")
+            logger.debug(f"Text inserter obtained: {inserter}")
+            
+            logger.debug("Calling insert_text_with_fallback()...")
+            try:
+                inserter.insert_text_with_fallback(text)
+                logger.debug("Text insertion complete")
+            except Exception as e:
+                logger.exception(f"Text insertion failed: {e}")
+                raise
             
             # Notify callback
             if self.on_transcription:
                 try:
+                    logger.debug("Calling on_transcription callback...")
                     self.on_transcription(text)
+                    logger.debug("on_transcription callback complete")
                 except Exception as e:
                     logger.error(f"Transcription callback error: {e}", exc_info=True)
             
+            logger.debug("_process_audio() completed successfully")
+            
         except Exception as e:
-            logger.exception(f"Processing failed with exception: {e}")
+            logger.error(f"Processing failed with exception: {type(e).__name__}: {e}")
+            logger.error(f"Full traceback:\n{traceback.format_exc()}")
+            # Also print to stderr in case logging is broken
+            print(f"CRITICAL ERROR in _process_audio: {type(e).__name__}: {e}", file=sys.stderr)
+            traceback.print_exc(file=sys.stderr)
             self._handle_error(f"Processing failed: {e}")
         finally:
+            logger.debug("_process_audio() finally block")
             # Clean up audio file
             try:
                 os.unlink(audio_file)
@@ -287,6 +326,7 @@ class DictationController:
                 logger.warning(f"Failed to clean up audio file: {e}")
             
             self._set_state(DictationState.IDLE)
+            logger.debug("_process_audio() exiting")
     
     def _handle_error(self, message: str) -> None:
         """Handle error condition."""
