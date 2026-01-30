@@ -14,19 +14,16 @@ Open Source Speech-to-Text for macOS - A clone of Whispr Flow.
 ## Quick Start
 
 ```bash
-# 1. Install system dependencies
-brew install portaudio
-
-# 2. Install WhOSSper
+# 1. Install WhOSSper (no system dependencies needed)
 uv sync
 
-# 3. Create default configuration
+# 2. Create default configuration
 uv run whossper config --init
 
-# 4. Check permissions (grant when prompted)
+# 3. Check permissions (grant when prompted)
 uv run whossper check
 
-# 5. Start dictation service
+# 4. Start dictation service
 uv run whossper start
 ```
 
@@ -110,15 +107,9 @@ This section covers the complete setup of WhOSSper Flow on macOS, including perm
 
 ## Step-by-Step Installation
 
-### 1. Install System Dependencies
+### 1. Install Python Dependencies
 
-WhOSSper requires PortAudio for audio recording:
-
-```bash
-brew install portaudio
-```
-
-### 2. Install Python Dependencies
+WhOSSper uses `sounddevice` for audio recording, which has no system dependencies.
 
 If using `uv` (recommended):
 
@@ -132,7 +123,7 @@ Or with pip:
 pip install -e .
 ```
 
-### 3. Grant macOS Permissions
+### 2. Grant macOS Permissions
 
 WhOSSper requires two macOS permissions to function:
 
@@ -159,7 +150,7 @@ Required for injecting text into applications.
 
 > **Note:** You need to grant Accessibility access to the application that runs WhOSSper (e.g., Terminal.app, iTerm2, VS Code terminal).
 
-### 4. Verify Permissions
+### 3. Verify Permissions
 
 Run the permission check command:
 
@@ -332,38 +323,56 @@ The first time you use a model, Whisper downloads it automatically. If this fail
 ## Running Tests
 
 ```bash
-# Run all tests
+# Run all automated tests
 uv run pytest
 
 # Run with coverage
 uv run pytest --cov=whossper
 
-# Run specific test file
-uv run pytest tests/test_integration.py
+# Run manual E2E tests (interactive, requires user input)
+WHOSSPER_MANUAL_TESTS=1 uv run pytest tests/test_e2e_manual.py -v -s
+
+# Or run manual tests directly
+python tests/test_e2e_manual.py
 ```
 
 ## Development
 
 ### Project Structure
 
+The codebase follows a simplified architecture with only 4 core files:
+
 ```
 whossper/
-├── audio/          # Audio recording
-├── transcription/  # Whisper integration
-├── input/          # Text injection & keyboard
-├── enhancement/    # OpenAI text enhancement
-├── config/         # Configuration management
-├── permissions/    # macOS permissions
-├── core/           # Main controller
-└── cli.py          # CLI interface
+├── __init__.py     # Version and exports
+├── cli.py          # Typer-based CLI interface
+├── config.py       # Configuration (schema + management)
+├── core.py         # Main controller (audio, keyboard, transcription, text insertion)
+└── enhancer.py     # Optional LLM text enhancement
+
+tests/
+├── conftest.py        # Pytest fixtures
+├── test_cli.py        # CLI tests
+├── test_config.py     # Configuration tests
+├── test_core.py       # Core functionality tests
+├── test_enhancer.py   # Enhancement tests
+└── test_e2e_manual.py # Interactive manual tests
 ```
+
+### Key Dependencies
+
+- **sounddevice** - Audio recording (no system dependencies)
+- **openai-whisper** - Local speech-to-text
+- **pynput** - Keyboard shortcuts
+- **pyperclip** - Clipboard operations
+- **typer** - CLI framework
 
 ### Adding Features
 
-1. Create a new module in the appropriate package
+1. Modify the appropriate module in `whossper/`
 2. Add tests in `tests/`
 3. Run tests: `uv run pytest`
-4. Update documentation as needed
+4. Run manual E2E tests before submitting changes
 
 ## Support
 
