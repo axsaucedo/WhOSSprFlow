@@ -156,6 +156,9 @@ class TestControllerIntegration:
             # Stop recording - this triggers transcription
             controller.stop_recording()
             
+            # Wait for background processing to complete
+            controller.wait_for_processing(timeout=5.0)
+            
             # Verify transcription was captured
             mock_trans_instance.transcribe_to_text.assert_called_once()
             mock_ins_instance.insert_text_with_fallback.assert_called_once_with("Hello world")
@@ -205,6 +208,9 @@ class TestControllerIntegration:
             controller = DictationController(config)
             controller.start_recording()
             controller.stop_recording()
+            
+            # Wait for background processing to complete
+            controller.wait_for_processing(timeout=5.0)
             
             # Verify enhancement was called
             mock_enhancer.enhance.assert_called_once_with("um hello uh world")

@@ -100,17 +100,27 @@ def start(
     hold_shortcut: Optional[str] = typer.Option(
         None,
         "--hold-shortcut",
-        help="Hold-to-dictate keyboard shortcut (e.g., 'ctrl+shift').",
+        help="Hold-to-dictate keyboard shortcut (e.g., 'ctrl+cmd+1').",
     ),
     toggle_shortcut: Optional[str] = typer.Option(
         None,
         "--toggle-shortcut",
-        help="Toggle dictation keyboard shortcut (e.g., 'ctrl+alt+d').",
+        help="Toggle dictation keyboard shortcut (e.g., 'ctrl+cmd+2').",
     ),
     skip_permission_check: bool = typer.Option(
         False,
         "--skip-permission-check",
         help="Skip permission checks (not recommended).",
+    ),
+    debug: bool = typer.Option(
+        False,
+        "--debug",
+        help="Enable debug logging with verbose output.",
+    ),
+    log_file: Optional[Path] = typer.Option(
+        None,
+        "--log-file",
+        help="Path to log file. If not specified, logs go to stderr only.",
     ),
 ) -> None:
     """Start the WhOSSper dictation service.
@@ -122,6 +132,22 @@ def start(
     """
     global _controller
     
+    # Setup logging FIRST before any other operations
+    from whossper.logging_config import setup_logging, get_default_log_file
+    
+    log_path = str(log_file) if log_file else None
+    if debug and not log_path:
+        # In debug mode, auto-create log file if not specified
+        log_path = get_default_log_file("./tmp/logs")
+    
+    setup_logging(debug=debug, log_file=log_path)
+    
+    import logging
+    logger = logging.getLogger("whossper.cli")
+    logger.info(f"WhOSSper Flow v{__version__} starting...")
+    if log_path:
+        console.print(f"[dim]Logging to: {log_path}[/dim]")
+    
     # Load configuration
     if config_file:
         manager = ConfigManager(str(config_file))
@@ -129,6 +155,7 @@ def start(
         manager = ConfigManager()
     
     config = manager.load()
+    logger.debug(f"Loaded config: {config}")
     
     # Apply command-line overrides
     if model:

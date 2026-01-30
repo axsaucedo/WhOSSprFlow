@@ -206,6 +206,20 @@ class DictationController:
             self._handle_error(f"Failed to stop recording: {e}")
             return False
     
+    def wait_for_processing(self, timeout: Optional[float] = None) -> bool:
+        """Wait for background processing to complete.
+        
+        Args:
+            timeout: Maximum time to wait in seconds. None for no timeout.
+            
+        Returns:
+            True if processing completed, False if still running or timeout.
+        """
+        if self._processing_thread is not None:
+            self._processing_thread.join(timeout=timeout)
+            return not self._processing_thread.is_alive()
+        return True
+    
     def cancel_recording(self) -> None:
         """Cancel current recording without processing."""
         if self._state == DictationState.RECORDING:
