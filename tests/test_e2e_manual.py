@@ -256,8 +256,7 @@ def test_hold_to_dictate() -> bool:
         icons = {
             DictationState.IDLE: "⏸️",
             DictationState.RECORDING: "🎤",
-            DictationState.TRANSCRIBING: "⏳",
-            DictationState.INSERTING: "📝",
+            DictationState.PROCESSING: "⏳",
         }
         print(f"\r  State: {icons.get(state, '')} {state.value}     ", end="", flush=True)
     
@@ -328,8 +327,7 @@ def test_toggle_dictation() -> bool:
         icons = {
             DictationState.IDLE: "⏸️",
             DictationState.RECORDING: "🎤",
-            DictationState.TRANSCRIBING: "⏳",
-            DictationState.INSERTING: "📝",
+            DictationState.PROCESSING: "⏳",
         }
         print(f"\r  State: {icons.get(state, '')} {state.value}     ", end="", flush=True)
     
