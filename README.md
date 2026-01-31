@@ -59,7 +59,20 @@ WhOSSpr requires two macOS permissions:
 
 Verify with:
 ```bash
-whosspr check
+> whosspr check
+
+╭── WhOSSpr Flow ──╮
+│ Permission Check │
+╰──────────────────╯
+     Required Permissions
+┏━━━━━━━━━━━━━━━┳━━━━━━━━━━━━┓
+┃ Permission    ┃   Status   ┃
+┡━━━━━━━━━━━━━━━╇━━━━━━━━━━━━┩
+│ Microphone    │ ✅ Granted │
+│ Accessibility │ ✅ Granted │
+└───────────────┴────────────┘
+
+✅ All permissions granted!
 ```
 
 ## Features
