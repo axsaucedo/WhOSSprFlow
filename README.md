@@ -1,6 +1,8 @@
 # WhOSSpr Flow
 
-Open Source Speech-to-Text for macOS - A clone of Whispr Flow.
+An Open Source WhisprFlow Clone Speech-to-Text for macOS; eupports press to speak, toggle dictation, local inference, and configurable enhancement with OpenAI compatible models.
+
+![](./whosspr.gif)
 
 ## Installation
 
@@ -11,14 +13,32 @@ pip install whosspr
 ## Quick Start
 
 ```bash
-# 1. Create default configuration
-whosspr config --init
+# Start service and use keyboard shortcuts (below) to speak
+> whosspr start
 
-# 2. Check permissions (grant when prompted)
-whosspr check
+11:25:20 [INFO] whosspr.cli: WhOSSpr Flow v0.1.0 starting...
+11:25:20 [INFO] whosspr.config: No config file found, using defaults
+╭───── Starting ──────╮
+│ WhOSSpr Flow v0.1.0 │
+│                     │
+│ Model: base         │
+│ Language: en        │
+│ Device: auto        │
+│ Enhancement: off    │
+│                     │
+│ Hold: ctrl+cmd+1    │
+│ Toggle: ctrl+cmd+2  │
+╰─────────────────────╯
 
-# 3. Start dictation service
-whosspr start
+Press Ctrl+C to stop.
+
+11:25:20 [INFO] whosspr.controller: Loading Whisper model...
+11:25:20 [INFO] whosspr.transcriber: Loading Whisper model 'base' on mps
+11:25:22 [INFO] whosspr.transcriber: Model loaded
+11:25:22 [INFO] whosspr.keyboard: Registered shortcut: ctrl+cmd+1 (hold)
+11:25:22 [INFO] whosspr.keyboard: Registered shortcut: ctrl+cmd+2 (toggle)
+11:25:22 [INFO] whosspr.keyboard: Keyboard listener started
+11:25:22 [INFO] whosspr.controller: Dictation service started
 ```
 
 ## Default Shortcuts
@@ -27,6 +47,20 @@ whosspr start
 |----------|--------|
 | `Ctrl+Cmd+1` (hold) | Hold to record, release to transcribe |
 | `Ctrl+Cmd+2` | Toggle dictation on/off |
+
+## Permissions Setup
+
+WhOSSpr requires two macOS permissions:
+
+| Permission | Purpose | How to Grant |
+|------------|---------|--------------|
+| Microphone | Record audio | System Preferences → Privacy → Microphone → Enable Terminal |
+| Accessibility | Insert text | System Preferences → Privacy → Accessibility → Add Terminal |
+
+Verify with:
+```bash
+whosspr check
+```
 
 ## Features
 
@@ -41,14 +75,25 @@ whosspr start
 
 ## Configuration
 
-Copy `config.example.json` to `whosspr.json` and customize:
+Initialise config with:
+
+```bash
+# Create a new config
+whosspr config --init
+
+# Run with config
+whosspr start --config ./whosspr.json
+```
+
+You will get 
 
 ```json
 {
   "whisper": {
     "model_size": "base",
     "language": "en",
-    "device": "auto"
+    "device": "auto",
+    "model_cache_dir": null
   },
   "shortcuts": {
     "hold_to_dictate": "ctrl+cmd+1",
@@ -58,8 +103,20 @@ Copy `config.example.json` to `whosspr.json` and customize:
     "enabled": false,
     "api_base_url": "https://api.openai.com/v1",
     "api_key": "",
-    "model": "gpt-4o-mini"
-  }
+    "api_key_helper": null,
+    "api_key_env_var": null,
+    "model": "gpt-4o-mini",
+    "system_prompt_file": "prompts/default_enhancement.txt",
+    "custom_system_prompt": null
+  },
+  "audio": {
+    "sample_rate": 16000,
+    "channels": 1,
+    "min_duration": 0.5,
+    "prepend_space": true
+  },
+  "tmp_dir": "./tmp",
+  "log_level": "INFO"
 }
 ```
 
@@ -84,20 +141,6 @@ Copy `config.example.json` to `whosspr.json` and customize:
 | Python | 3.12+ |
 | Permissions | Microphone access, Accessibility access |
 | RAM | 2GB+ (more for larger models) |
-
-## Permissions Setup
-
-WhOSSpr requires two macOS permissions:
-
-| Permission | Purpose | How to Grant |
-|------------|---------|--------------|
-| Microphone | Record audio | System Preferences → Privacy → Microphone → Enable Terminal |
-| Accessibility | Insert text | System Preferences → Privacy → Accessibility → Add Terminal |
-
-Verify with:
-```bash
-whosspr check
-```
 
 ## Usage
 
