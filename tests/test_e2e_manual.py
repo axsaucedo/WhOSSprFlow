@@ -22,18 +22,14 @@ import pytest
 sys.path.insert(0, str(__file__).replace("/tests/test_e2e_manual.py", ""))
 
 from whosspr.config import Config, load_config
-from whosspr.core import (
-    AudioRecorder,
-    Transcriber,
-    DictationController,
-    DictationState,
-    check_permissions,
-    PermissionStatus,
-)
+from whosspr.recorder import AudioRecorder
+from whosspr.transcriber import Transcriber
+from whosspr.controller import DictationController, DictationState
+from whosspr.permissions import check_all, PermissionStatus
 
 
 # Skip all tests in this module unless --manual is passed or run directly
-_RUN_MANUAL = os.environ.get("WHOSSPER_MANUAL_TESTS") == "1"
+_RUN_MANUAL = os.environ.get("WHOSSPR_MANUAL_TESTS") == "1"
 
 
 def skip_unless_manual():
@@ -88,7 +84,7 @@ def test_permissions() -> bool:
     print_header("TEST: Check Permissions")
     
     print("  Checking required macOS permissions...")
-    perms = check_permissions()
+    perms = check_all()
     
     all_ok = True
     for name, status in perms.items():
