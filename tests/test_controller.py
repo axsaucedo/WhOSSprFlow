@@ -114,7 +114,7 @@ class TestDictationController:
         
         assert result is True
         assert ctrl.state == DictationState.IDLE
-        mock_ins.insert.assert_called_with("Hello world")
+        mock_ins.insert.assert_called_with("Hello world", prepend_space=True)
     
     @patch("whosspr.controller.Transcriber")
     @patch("whosspr.controller.AudioRecorder")
@@ -186,7 +186,7 @@ class TestDictationController:
         ctrl.stop_recording()
         
         enhancer.assert_called_with("raw text")
-        mock_ins.insert.assert_called_with("enhanced text")
+        mock_ins.insert.assert_called_with("enhanced text", prepend_space=True)
     
     @patch("whosspr.controller.Transcriber")
     @patch("whosspr.controller.AudioRecorder")

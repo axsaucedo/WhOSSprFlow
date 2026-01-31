@@ -78,6 +78,7 @@ class DictationController:
             device=config.whisper.device,
         )
         self._inserter = TextInserter()
+        self._prepend_space = config.audio.prepend_space
         self._shortcuts = KeyboardShortcuts()
     
     @property
@@ -168,7 +169,7 @@ class DictationController:
                     logger.warning(f"Enhancement failed: {e}")
             
             # Insert text
-            self._inserter.insert(text)
+            self._inserter.insert(text, prepend_space=self._prepend_space)
             
             # Notify
             if self.on_text:

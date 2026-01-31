@@ -25,17 +25,22 @@ class TextInserter:
         self._keyboard = Controller()
         self._paste_delay = paste_delay
     
-    def insert(self, text: str) -> bool:
+    def insert(self, text: str, prepend_space: bool = True) -> bool:
         """Insert text at cursor position using Cmd+V.
         
         Args:
             text: Text to insert.
+            prepend_space: If True, add leading space before text.
             
         Returns:
             True if successful.
         """
         if not text:
             return False
+        
+        # Add leading space for natural spacing between dictations
+        if prepend_space and not text.startswith((' ', '\n', '\t')):
+            text = ' ' + text
         
         try:
             pyperclip.copy(text)

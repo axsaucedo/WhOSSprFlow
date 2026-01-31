@@ -76,6 +76,7 @@ class AudioConfig(BaseModel):
     sample_rate: int = Field(default=16000)
     channels: int = Field(default=1)
     min_duration: float = Field(default=0.5)
+    prepend_space: bool = Field(default=True, description="Add leading space before inserted text")
 
 
 # =============================================================================
