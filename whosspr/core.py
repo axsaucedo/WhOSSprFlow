@@ -1,4 +1,4 @@
-"""WhOSSper Core - Audio recording, transcription, keyboard shortcuts, and text insertion.
+"""WhOSSpr Core - Audio recording, transcription, keyboard shortcuts, and text insertion.
 
 This module consolidates all core functionality into a single file for simplicity.
 """
@@ -23,7 +23,7 @@ import pyperclip
 from pynput import keyboard
 from pynput.keyboard import Key, KeyCode, Controller
 
-from whossper.config import Config, ModelSize, DeviceType
+from whosspr.config import Config, ModelSize, DeviceType
 
 
 logger = logging.getLogger(__name__)

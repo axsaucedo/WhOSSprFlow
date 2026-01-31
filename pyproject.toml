@@ -1,7 +1,7 @@
 [project]
-name = "whossper"
+name = "whosspr"
 version = "0.1.0"
-description = "WhOSSper Flow - Open Source Speech-to-Text for macOS"
+description = "WhOSSpr Flow - Open Source Speech-to-Text for macOS"
 readme = "README.md"
 license = "Apache-2.0"
 requires-python = ">=3.12"
@@ -25,7 +25,7 @@ dev = [
 ]
 
 [project.scripts]
-whossper = "whossper.cli:app"
+whosspr = "whosspr.cli:app"
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

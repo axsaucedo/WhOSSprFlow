@@ -1,12 +1,12 @@
-"""WhOSSper Flow - Open Source Speech-to-Text for macOS."""
+"""WhOSSpr Flow - Open Source Speech-to-Text for macOS."""
 
-from whossper import __version__, __app_name__
+from whosspr import __version__, __app_name__
 
 
 def main():
-    """Main entry point for WhOSSper Flow."""
+    """Main entry point for WhOSSpr Flow."""
     print(f"{__app_name__} v{__version__}")
-    print("Use 'whossper --help' to see available commands.")
+    print("Use 'whosspr --help' to see available commands.")
 
 
 if __name__ == "__main__":

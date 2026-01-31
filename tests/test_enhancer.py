@@ -1,10 +1,10 @@
-"""Tests for whossper.enhancer module."""
+"""Tests for whosspr.enhancer module."""
 
 import os
 import pytest
 from unittest.mock import MagicMock, patch
 
-from whossper.enhancer import (
+from whosspr.enhancer import (
     TextEnhancer,
     resolve_api_key,
     create_enhancer,
@@ -27,7 +27,7 @@ class TestTextEnhancer:
         with pytest.raises(ValueError, match="API key is required"):
             TextEnhancer(api_key=None)
     
-    @patch("whossper.enhancer.OpenAI")
+    @patch("whosspr.enhancer.OpenAI")
     def test_init_success(self, mock_openai_class):
         """Test successful initialization."""
         enhancer = TextEnhancer(api_key="test-key", model="gpt-4")
@@ -35,14 +35,14 @@ class TestTextEnhancer:
         assert enhancer.model == "gpt-4"
         mock_openai_class.assert_called_once()
     
-    @patch("whossper.enhancer.OpenAI")
+    @patch("whosspr.enhancer.OpenAI")
     def test_default_prompt(self, mock_openai_class):
         """Test default system prompt is used."""
         enhancer = TextEnhancer(api_key="test-key")
         
         assert enhancer.system_prompt == DEFAULT_SYSTEM_PROMPT
     
-    @patch("whossper.enhancer.OpenAI")
+    @patch("whosspr.enhancer.OpenAI")
     def test_custom_prompt(self, mock_openai_class):
         """Test custom system prompt."""
         custom = "You are a test prompt."
@@ -50,7 +50,7 @@ class TestTextEnhancer:
         
         assert enhancer.system_prompt == custom
     
-    @patch("whossper.enhancer.OpenAI")
+    @patch("whosspr.enhancer.OpenAI")
     def test_prompt_from_file(self, mock_openai_class, tmp_path):
         """Test loading prompt from file."""
         prompt_file = tmp_path / "prompt.txt"
@@ -63,7 +63,7 @@ class TestTextEnhancer:
         
         assert enhancer.system_prompt == "Custom file prompt."
     
-    @patch("whossper.enhancer.OpenAI")
+    @patch("whosspr.enhancer.OpenAI")
     def test_prompt_priority(self, mock_openai_class, tmp_path):
         """Test custom prompt takes priority over file."""
         prompt_file = tmp_path / "prompt.txt"
@@ -77,7 +77,7 @@ class TestTextEnhancer:
         
         assert enhancer.system_prompt == "Custom takes priority"
     
-    @patch("whossper.enhancer.OpenAI")
+    @patch("whosspr.enhancer.OpenAI")
     def test_missing_prompt_file(self, mock_openai_class):
         """Test fallback when prompt file doesn't exist."""
         enhancer = TextEnhancer(
@@ -87,7 +87,7 @@ class TestTextEnhancer:
         
         assert enhancer.system_prompt == DEFAULT_SYSTEM_PROMPT
     
-    @patch("whossper.enhancer.OpenAI")
+    @patch("whosspr.enhancer.OpenAI")
     def test_enhance_empty_text(self, mock_openai_class):
         """Test enhance rejects empty text."""
         enhancer = TextEnhancer(api_key="test-key")
@@ -98,7 +98,7 @@ class TestTextEnhancer:
         with pytest.raises(ValueError, match="cannot be empty"):
             enhancer.enhance("   ")
     
-    @patch("whossper.enhancer.OpenAI")
+    @patch("whosspr.enhancer.OpenAI")
     def test_enhance_success(self, mock_openai_class):
         """Test successful text enhancement."""
         mock_client = MagicMock()
@@ -115,7 +115,7 @@ class TestTextEnhancer:
         assert result == "Enhanced text here"
         mock_client.chat.completions.create.assert_called_once()
     
-    @patch("whossper.enhancer.OpenAI")
+    @patch("whosspr.enhancer.OpenAI")
     def test_enhance_api_error(self, mock_openai_class):
         """Test enhance handles API errors."""
         mock_client = MagicMock()
@@ -127,7 +127,7 @@ class TestTextEnhancer:
         with pytest.raises(Exception, match="API Error"):
             enhancer.enhance("Some text")
     
-    @patch("whossper.enhancer.OpenAI")
+    @patch("whosspr.enhancer.OpenAI")
     def test_callable_interface(self, mock_openai_class):
         """Test enhancer can be called directly."""
         mock_client = MagicMock()
@@ -143,7 +143,7 @@ class TestTextEnhancer:
         
         assert result == "Result"
     
-    @patch("whossper.enhancer.OpenAI")
+    @patch("whosspr.enhancer.OpenAI")
     def test_client_property(self, mock_openai_class):
         """Test client property returns OpenAI client."""
         mock_client = MagicMock()
@@ -251,7 +251,7 @@ class TestResolveApiKey:
 class TestCreateEnhancer:
     """Tests for create_enhancer function."""
     
-    @patch("whossper.enhancer.OpenAI")
+    @patch("whosspr.enhancer.OpenAI")
     def test_create_with_direct_key(self, mock_openai_class):
         """Test creating enhancer with direct key."""
         enhancer = create_enhancer(api_key="test-key")
@@ -264,7 +264,7 @@ class TestCreateEnhancer:
         enhancer = create_enhancer()
         assert enhancer is None
     
-    @patch("whossper.enhancer.OpenAI")
+    @patch("whosspr.enhancer.OpenAI")
     def test_create_with_all_options(self, mock_openai_class):
         """Test creating enhancer with all options."""
         enhancer = create_enhancer(
@@ -279,7 +279,7 @@ class TestCreateEnhancer:
         assert enhancer.system_prompt == "Custom prompt"
     
     @patch("subprocess.run")
-    @patch("whossper.enhancer.OpenAI")
+    @patch("whosspr.enhancer.OpenAI")
     def test_create_with_helper(self, mock_openai_class, mock_run):
         """Test creating enhancer with helper command."""
         mock_run.return_value = MagicMock(returncode=0, stdout="helper-key")

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Manual End-to-End Tests for WhOSSper Flow.
+"""Manual End-to-End Tests for WhOSSpr Flow.
 
 These tests require user interaction and cannot be automated.
 They validate real-world usage scenarios with actual audio input.
@@ -21,8 +21,8 @@ import pytest
 # Add project root to path
 sys.path.insert(0, str(__file__).replace("/tests/test_e2e_manual.py", ""))
 
-from whossper.config import Config, load_config
-from whossper.core import (
+from whosspr.config import Config, load_config
+from whosspr.core import (
     AudioRecorder,
     Transcriber,
     DictationController,
@@ -373,7 +373,7 @@ def test_toggle_dictation() -> bool:
 
 def run_all_tests() -> None:
     """Run all manual E2E tests."""
-    print_header("WhOSSper Flow - Manual E2E Tests")
+    print_header("WhOSSpr Flow - Manual E2E Tests")
     
     print("  These tests require user interaction.")
     print("  Follow the prompts and provide input when asked.")
@@ -426,7 +426,7 @@ def run_all_tests() -> None:
 
 def run_quick_test() -> None:
     """Run a quick recording + transcription test."""
-    print_header("WhOSSper Flow - Quick Test")
+    print_header("WhOSSpr Flow - Quick Test")
     
     if not test_permissions():
         return
@@ -443,7 +443,7 @@ def run_quick_test() -> None:
 if __name__ == "__main__":
     import argparse
     
-    parser = argparse.ArgumentParser(description="Manual E2E tests for WhOSSper")
+    parser = argparse.ArgumentParser(description="Manual E2E tests for WhOSSpr")
     parser.add_argument("--quick", action="store_true", help="Run quick test only")
     parser.add_argument("--permissions", action="store_true", help="Check permissions only")
     parser.add_argument("--recording", action="store_true", help="Test recording only")

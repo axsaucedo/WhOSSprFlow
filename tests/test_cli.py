@@ -1,12 +1,12 @@
-"""Tests for whossper.cli module."""
+"""Tests for whosspr.cli module."""
 
 import pytest
 from unittest.mock import patch, MagicMock
 from typer.testing import CliRunner
 from pathlib import Path
 
-from whossper.cli import app
-from whossper import __version__
+from whosspr.cli import app
+from whosspr import __version__
 
 
 runner = CliRunner()
@@ -25,16 +25,16 @@ class TestVersionCommand:
         """Test -v flag."""
         result = runner.invoke(app, ["-v"])
         assert result.exit_code == 0
-        assert "WhOSSper Flow version" in result.stdout
+        assert "WhOSSpr Flow version" in result.stdout
 
 
 class TestCheckCommand:
     """Tests for check command."""
     
-    @patch("whossper.cli.check_permissions")
+    @patch("whosspr.cli.check_permissions")
     def test_check_all_granted(self, mock_check):
         """Test check when all permissions granted."""
-        from whossper.core import PermissionStatus
+        from whosspr.core import PermissionStatus
         mock_check.return_value = {
             "microphone": PermissionStatus.GRANTED,
             "accessibility": PermissionStatus.GRANTED,
@@ -44,10 +44,10 @@ class TestCheckCommand:
         assert result.exit_code == 0
         assert "All permissions granted" in result.stdout
     
-    @patch("whossper.cli.check_permissions")
+    @patch("whosspr.cli.check_permissions")
     def test_check_denied(self, mock_check):
         """Test check with denied permissions."""
-        from whossper.core import PermissionStatus
+        from whosspr.core import PermissionStatus
         mock_check.return_value = {
             "microphone": PermissionStatus.DENIED,
             "accessibility": PermissionStatus.GRANTED,
@@ -94,11 +94,11 @@ class TestModelsCommand:
 class TestStartCommand:
     """Tests for start command (mocked)."""
     
-    @patch("whossper.cli.DictationController")
-    @patch("whossper.cli.check_permissions")
+    @patch("whosspr.cli.DictationController")
+    @patch("whosspr.cli.check_permissions")
     def test_start_missing_permissions_decline(self, mock_perms, mock_controller):
         """Test start with missing permissions, user declines."""
-        from whossper.core import PermissionStatus
+        from whosspr.core import PermissionStatus
         mock_perms.return_value = {
             "microphone": PermissionStatus.DENIED,
             "accessibility": PermissionStatus.GRANTED,
@@ -107,11 +107,11 @@ class TestStartCommand:
         result = runner.invoke(app, ["start"], input="n\n")
         assert result.exit_code == 1
     
-    @patch("whossper.cli.DictationController")
-    @patch("whossper.cli.check_permissions")
+    @patch("whosspr.cli.DictationController")
+    @patch("whosspr.cli.check_permissions")
     def test_start_skip_permission_check(self, mock_perms, mock_controller):
         """Test start with --skip-permission-check."""
-        from whossper.core import PermissionStatus
+        from whosspr.core import PermissionStatus
         mock_perms.return_value = {
             "microphone": PermissionStatus.DENIED,
             "accessibility": PermissionStatus.DENIED,
@@ -126,11 +126,11 @@ class TestStartCommand:
         # Controller start fails, but permissions were skipped
         assert mock_controller.called
     
-    @patch("whossper.cli.DictationController")
-    @patch("whossper.cli.check_permissions")
+    @patch("whosspr.cli.DictationController")
+    @patch("whosspr.cli.check_permissions")
     def test_start_invalid_model(self, mock_perms, mock_controller):
         """Test start with invalid model."""
-        from whossper.core import PermissionStatus
+        from whosspr.core import PermissionStatus
         mock_perms.return_value = {
             "microphone": PermissionStatus.GRANTED,
             "accessibility": PermissionStatus.GRANTED,
@@ -140,12 +140,12 @@ class TestStartCommand:
         assert result.exit_code == 1
         assert "Invalid model" in result.stdout
     
-    @patch("whossper.cli.DictationController")
-    @patch("whossper.cli.check_permissions")
+    @patch("whosspr.cli.DictationController")
+    @patch("whosspr.cli.check_permissions")
     def test_start_with_config_file(self, mock_perms, mock_controller, tmp_path):
         """Test start with config file."""
-        from whossper.core import PermissionStatus
-        from whossper.config import create_default_config, save_config
+        from whosspr.core import PermissionStatus
+        from whosspr.config import create_default_config, save_config
         
         mock_perms.return_value = {
             "microphone": PermissionStatus.GRANTED,
@@ -170,7 +170,7 @@ class TestHelpOutput:
         """Test main help."""
         result = runner.invoke(app, ["--help"])
         assert result.exit_code == 0
-        assert "WhOSSper Flow" in result.stdout
+        assert "WhOSSpr Flow" in result.stdout
     
     def test_start_help(self):
         """Test start command help."""

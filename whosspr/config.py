@@ -1,4 +1,4 @@
-"""WhOSSper Configuration - Schema and management in one module."""
+"""WhOSSpr Configuration - Schema and management in one module."""
 
 import json
 import logging
@@ -83,7 +83,7 @@ class AudioConfig(BaseModel):
 # =============================================================================
 
 class Config(BaseModel):
-    """Main WhOSSper configuration."""
+    """Main WhOSSpr configuration."""
     whisper: WhisperConfig = Field(default_factory=WhisperConfig)
     shortcuts: ShortcutsConfig = Field(default_factory=ShortcutsConfig)
     enhancement: EnhancementConfig = Field(default_factory=EnhancementConfig)
@@ -97,9 +97,9 @@ class Config(BaseModel):
 # =============================================================================
 
 DEFAULT_CONFIG_PATHS = [
-    Path("whossper.json"),
+    Path("whosspr.json"),
     Path("config.json"),
-    Path.home() / ".config" / "whossper" / "config.json",
+    Path.home() / ".config" / "whosspr" / "config.json",
 ]
 
 

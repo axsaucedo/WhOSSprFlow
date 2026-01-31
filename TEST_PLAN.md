@@ -1,6 +1,6 @@
-# WhOSSper Flow - Manual End-to-End Test Plan
+# WhOSSpr Flow - Manual End-to-End Test Plan
 
-This document outlines manual testing procedures for validating WhOSSper Flow functionality. These tests should be run after significant changes to ensure end-to-end functionality works correctly.
+This document outlines manual testing procedures for validating WhOSSpr Flow functionality. These tests should be run after significant changes to ensure end-to-end functionality works correctly.
 
 ## Prerequisites
 
@@ -13,12 +13,12 @@ Before running tests:
    ```
 
 2. **Grant macOS permissions:**
-   - Microphone access: Run `uv run whossper check` and grant when prompted
+   - Microphone access: Run `uv run whosspr check` and grant when prompted
    - Accessibility access: System Preferences → Security & Privacy → Privacy → Accessibility → Add Terminal
 
 3. **Verify permissions:**
    ```bash
-   uv run whossper check
+   uv run whosspr check
    ```
    Expected: Both Microphone and Accessibility show "✅ Granted"
 
@@ -30,7 +30,7 @@ Before running tests:
 
 **Debug Command:**
 ```bash
-uv run whossper start --debug --log-file ./tmp/logs/test1_startup.log
+uv run whosspr start --debug --log-file ./tmp/logs/test1_startup.log
 ```
 
 **Steps:**
@@ -55,11 +55,11 @@ uv run whossper start --debug --log-file ./tmp/logs/test1_startup.log
 
 **Debug Command:**
 ```bash
-uv run whossper start --debug --log-file ./tmp/logs/test2_hold.log
+uv run whosspr start --debug --log-file ./tmp/logs/test2_hold.log
 ```
 
 **Steps:**
-1. Start WhOSSper with command above
+1. Start WhOSSpr with command above
 2. Open a text editor (TextEdit, VS Code, etc.)
 3. Click to place cursor in the text area
 4. Hold `Ctrl+Cmd+1`
@@ -89,11 +89,11 @@ cat ./tmp/logs/test2_hold.log | grep -E "(Recording|Transcri|Insert)"
 
 **Debug Command:**
 ```bash
-uv run whossper start --debug --log-file ./tmp/logs/test3_toggle.log
+uv run whosspr start --debug --log-file ./tmp/logs/test3_toggle.log
 ```
 
 **Steps:**
-1. Start WhOSSper with command above
+1. Start WhOSSpr with command above
 2. Open a text editor
 3. Press `Ctrl+Cmd+2` to start recording
 4. Speak: "Toggle mode test"
@@ -116,10 +116,10 @@ uv run whossper start --debug --log-file ./tmp/logs/test3_toggle.log
 **Debug Commands:**
 ```bash
 # Test tiny (fastest)
-uv run whossper start --model tiny --debug --log-file ./tmp/logs/test4_tiny.log
+uv run whosspr start --model tiny --debug --log-file ./tmp/logs/test4_tiny.log
 
 # Test small (better accuracy)
-uv run whossper start --model small --debug --log-file ./tmp/logs/test4_small.log
+uv run whosspr start --model small --debug --log-file ./tmp/logs/test4_small.log
 ```
 
 **Steps:**
@@ -143,12 +143,12 @@ uv run whossper start --model small --debug --log-file ./tmp/logs/test4_small.lo
 **Debug Command:**
 ```bash
 export OPENAI_API_KEY=your-api-key-here
-uv run whossper start --enhancement --debug --log-file ./tmp/logs/test5_enhance.log
+uv run whosspr start --enhancement --debug --log-file ./tmp/logs/test5_enhance.log
 ```
 
 **Or with local LLM (Ollama):**
 ```bash
-uv run whossper start --enhancement \
+uv run whosspr start --enhancement \
   --api-key ollama \
   --api-base-url http://localhost:11434/v1 \
   --debug --log-file ./tmp/logs/test5_enhance_local.log
@@ -177,7 +177,7 @@ cat ./tmp/logs/test5_enhance.log | grep -E "(Enhanced|Transcribed)"
 
 **Setup:**
 ```bash
-uv run whossper config --init --path ./tmp/test_config.json
+uv run whosspr config --init --path ./tmp/test_config.json
 ```
 
 **Edit the config to change model:**
@@ -187,7 +187,7 @@ uv run whossper config --init --path ./tmp/test_config.json
 
 **Debug Command:**
 ```bash
-uv run whossper start --config ./tmp/test_config.json --debug --log-file ./tmp/logs/test6_config.log
+uv run whosspr start --config ./tmp/test_config.json --debug --log-file ./tmp/logs/test6_config.log
 ```
 
 **Expected Results:**
@@ -202,11 +202,11 @@ uv run whossper start --config ./tmp/test_config.json --debug --log-file ./tmp/l
 
 **Debug Command:**
 ```bash
-uv run whossper start --debug --log-file ./tmp/logs/test7_short.log
+uv run whosspr start --debug --log-file ./tmp/logs/test7_short.log
 ```
 
 **Steps:**
-1. Start WhOSSper
+1. Start WhOSSpr
 2. Press and immediately release `Ctrl+Cmd+1` (very quick tap)
 
 **Expected Results:**
@@ -222,11 +222,11 @@ uv run whossper start --debug --log-file ./tmp/logs/test7_short.log
 
 **Debug Command:**
 ```bash
-uv run whossper start --debug --log-file ./tmp/logs/test8_recovery.log
+uv run whosspr start --debug --log-file ./tmp/logs/test8_recovery.log
 ```
 
 **Steps:**
-1. Start WhOSSper
+1. Start WhOSSpr
 2. Perform a successful dictation
 3. If any error occurs, try another dictation
 
@@ -248,7 +248,7 @@ ls -la ./tmp/logs/
 ### Permission Errors
 Re-run permission check:
 ```bash
-uv run whossper check
+uv run whosspr check
 ```
 
 ### Audio Issues
@@ -283,7 +283,7 @@ In addition to manual testing, run the automated test suite:
 uv run pytest -v
 
 # Run with coverage
-uv run pytest --cov=whossper
+uv run pytest --cov=whosspr
 
 # Run only integration tests
 uv run pytest tests/test_integration.py -v
@@ -308,5 +308,5 @@ After running tests, logs are saved to:
 
 To archive logs for bug reports:
 ```bash
-tar -czvf whossper_test_logs_$(date +%Y%m%d).tar.gz ./tmp/logs/
+tar -czvf whosspr_test_logs_$(date +%Y%m%d).tar.gz ./tmp/logs/
 ```

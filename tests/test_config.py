@@ -4,7 +4,7 @@ import json
 import pytest
 from pathlib import Path
 
-from whossper.config import (
+from whosspr.config import (
     Config,
     WhisperConfig,
     ShortcutsConfig,

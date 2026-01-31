@@ -1,4 +1,4 @@
-# WhOSSper Flow
+# WhOSSpr Flow
 
 Open Source Speech-to-Text for macOS - A clone of Whispr Flow.
 
@@ -14,17 +14,17 @@ Open Source Speech-to-Text for macOS - A clone of Whispr Flow.
 ## Quick Start
 
 ```bash
-# 1. Install WhOSSper (no system dependencies needed)
+# 1. Install WhOSSpr (no system dependencies needed)
 uv sync
 
 # 2. Create default configuration
-uv run whossper config --init
+uv run whosspr config --init
 
 # 3. Check permissions (grant when prompted)
-uv run whossper check
+uv run whosspr check
 
 # 4. Start dictation service
-uv run whossper start
+uv run whosspr start
 ```
 
 **Default shortcuts:**
@@ -35,7 +35,7 @@ For detailed setup instructions, see [Detailed Instructions](#detailed-instructi
 
 ## Configuration
 
-Copy `config.example.json` to `whossper.json` and customize:
+Copy `config.example.json` to `whosspr.json` and customize:
 
 ```json
 {
@@ -84,7 +84,7 @@ uv sync --dev
 uv run pytest
 
 # Run with coverage
-uv run pytest --cov=whossper
+uv run pytest --cov=whosspr
 ```
 
 ## License
@@ -95,7 +95,7 @@ Apache 2.0
 
 # Detailed Instructions
 
-This section covers the complete setup of WhOSSper Flow on macOS, including permissions, dependencies, and first run.
+This section covers the complete setup of WhOSSpr Flow on macOS, including permissions, dependencies, and first run.
 
 ## System Requirements
 
@@ -109,7 +109,7 @@ This section covers the complete setup of WhOSSper Flow on macOS, including perm
 
 ### 1. Install Python Dependencies
 
-WhOSSper uses `sounddevice` for audio recording, which has no system dependencies.
+WhOSSpr uses `sounddevice` for audio recording, which has no system dependencies.
 
 If using `uv` (recommended):
 
@@ -125,13 +125,13 @@ pip install -e .
 
 ### 2. Grant macOS Permissions
 
-WhOSSper requires two macOS permissions to function:
+WhOSSpr requires two macOS permissions to function:
 
 #### Microphone Access
 
 Required for recording your voice.
 
-1. Run `whossper check` - macOS will prompt for microphone access
+1. Run `whosspr check` - macOS will prompt for microphone access
 2. Click **"Allow"** when prompted
 3. Or manually:
    - Go to **System Preferences** → **Security & Privacy** → **Privacy**
@@ -148,14 +148,14 @@ Required for injecting text into applications.
 4. Click **+** and add your **Terminal** app (or iTerm2, VS Code, etc.)
 5. Make sure the checkbox is enabled
 
-> **Note:** You need to grant Accessibility access to the application that runs WhOSSper (e.g., Terminal.app, iTerm2, VS Code terminal).
+> **Note:** You need to grant Accessibility access to the application that runs WhOSSpr (e.g., Terminal.app, iTerm2, VS Code terminal).
 
 ### 3. Verify Permissions
 
 Run the permission check command:
 
 ```bash
-uv run whossper check
+uv run whosspr check
 ```
 
 You should see:
@@ -171,14 +171,14 @@ If any permissions are denied, follow the instructions shown.
 ### Create a Configuration File
 
 ```bash
-uv run whossper config --init
+uv run whosspr config --init
 ```
 
-This creates `whossper.json` in the current directory with default settings.
+This creates `whosspr.json` in the current directory with default settings.
 
 ### Configuration Options
 
-Edit `whossper.json`:
+Edit `whosspr.json`:
 
 ```json
 {
@@ -224,23 +224,23 @@ Edit `whossper.json`:
 ### Starting the Dictation Service
 
 ```bash
-uv run whossper start
+uv run whosspr start
 ```
 
 With options:
 
 ```bash
 # Use a specific model
-uv run whossper start --model small
+uv run whosspr start --model small
 
 # Specify language
-uv run whossper start --language es
+uv run whosspr start --language es
 
 # Use MPS (Apple Silicon GPU)
-uv run whossper start --device mps
+uv run whosspr start --device mps
 
 # Enable text enhancement with OpenAI API
-uv run whossper start --enhancement --api-key sk-xxx
+uv run whosspr start --enhancement --api-key sk-xxx
 ```
 
 ### Keyboard Shortcuts
@@ -266,19 +266,19 @@ Default shortcuts (configurable):
 
 ### Stopping the Service
 
-Press `Ctrl+C` in the terminal to stop WhOSSper.
+Press `Ctrl+C` in the terminal to stop WhOSSpr.
 
 ## Text Enhancement (Optional)
 
-WhOSSper can improve transcribed text using an OpenAI-compatible API:
+WhOSSpr can improve transcribed text using an OpenAI-compatible API:
 
 ```bash
 # Using OpenAI
 export OPENAI_API_KEY=sk-your-api-key
-uv run whossper start --enhancement
+uv run whosspr start --enhancement
 
 # Using a local LLM (e.g., Ollama)
-uv run whossper start --enhancement \
+uv run whosspr start --enhancement \
   --api-key ollama \
   --api-base-url http://localhost:11434/v1
 ```
@@ -291,7 +291,7 @@ Edit `prompts/default_enhancement.txt` to customize how the LLM improves your te
 
 ### "Permission denied" errors
 
-1. Run `uv run whossper check` to see which permissions are missing
+1. Run `uv run whosspr check` to see which permissions are missing
 2. Grant the required permissions in System Preferences
 3. **Important:** Restart your terminal after granting Accessibility access
 
@@ -327,7 +327,7 @@ The first time you use a model, Whisper downloads it automatically. If this fail
 uv run pytest
 
 # Run with coverage
-uv run pytest --cov=whossper
+uv run pytest --cov=whosspr
 
 # Run manual E2E tests (interactive, requires user input)
 WHOSSPER_MANUAL_TESTS=1 uv run pytest tests/test_e2e_manual.py -v -s
@@ -343,7 +343,7 @@ python tests/test_e2e_manual.py
 The codebase follows a simplified architecture with only 4 core files:
 
 ```
-whossper/
+whosspr/
 ├── __init__.py     # Version and exports
 ├── cli.py          # Typer-based CLI interface
 ├── config.py       # Configuration (schema + management)
@@ -369,7 +369,7 @@ tests/
 
 ### Adding Features
 
-1. Modify the appropriate module in `whossper/`
+1. Modify the appropriate module in `whosspr/`
 2. Add tests in `tests/`
 3. Run tests: `uv run pytest`
 4. Run manual E2E tests before submitting changes

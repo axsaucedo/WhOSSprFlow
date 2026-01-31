@@ -45,7 +45,7 @@ def sample_config_data():
 @pytest.fixture
 def config_file(tmp_dir, sample_config_data):
     """Create a temporary config file."""
-    config_path = tmp_dir / "whossper.json"
+    config_path = tmp_dir / "whosspr.json"
     with open(config_path, "w") as f:
         json.dump(sample_config_data, f)
     return config_path

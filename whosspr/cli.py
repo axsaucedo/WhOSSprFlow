@@ -1,4 +1,4 @@
-"""WhOSSper Flow CLI application.
+"""WhOSSpr Flow CLI application.
 
 Simplified CLI using Typer for the speech-to-text service.
 """
@@ -17,18 +17,18 @@ from rich.console import Console
 from rich.table import Table
 from rich.panel import Panel
 
-from whossper import __version__
-from whossper.config import (
+from whosspr import __version__
+from whosspr.config import (
     Config, ModelSize, DeviceType,
     load_config, save_config, create_default_config,
 )
-from whossper.core import (
+from whosspr.core import (
     DictationState,
     DictationController,
     check_permissions,
     PermissionStatus,
 )
-from whossper.enhancer import create_enhancer
+from whosspr.enhancer import create_enhancer
 
 
 # Thread exception handler
@@ -55,8 +55,8 @@ logger = logging.getLogger(__name__)
 
 # Create app
 app = typer.Typer(
-    name="whossper",
-    help="WhOSSper Flow - Open source speech-to-text for macOS",
+    name="whosspr",
+    help="WhOSSpr Flow - Open source speech-to-text for macOS",
     add_completion=False,
 )
 
@@ -69,7 +69,7 @@ _controller: Optional[DictationController] = None
 def version_callback(value: bool) -> None:
     """Show version and exit."""
     if value:
-        console.print(f"WhOSSper Flow version {__version__}")
+        console.print(f"WhOSSpr Flow version {__version__}")
         raise typer.Exit()
 
 
@@ -82,7 +82,7 @@ def main(
         help="Show version and exit.",
     ),
 ) -> None:
-    """WhOSSper Flow - Open source speech-to-text for macOS."""
+    """WhOSSpr Flow - Open source speech-to-text for macOS."""
     pass
 
 
@@ -130,7 +130,7 @@ def start(
         help="Enable debug logging.",
     ),
 ) -> None:
-    """Start the WhOSSper dictation service.
+    """Start the WhOSSpr dictation service.
     
     The service listens for keyboard shortcuts to start/stop dictation.
     Transcribed text is automatically inserted at the cursor position.
@@ -140,7 +140,7 @@ def start(
     global _controller
     
     setup_logging(debug)
-    logger.info(f"WhOSSper Flow v{__version__} starting...")
+    logger.info(f"WhOSSpr Flow v{__version__} starting...")
     
     # Load configuration
     config = load_config(str(config_file) if config_file else None)
@@ -187,7 +187,7 @@ def start(
             for p in denied:
                 console.print(f"  [red]• {p}[/red]")
             
-            console.print("\nRun [cyan]whossper check[/cyan] for instructions.")
+            console.print("\nRun [cyan]whosspr check[/cyan] for instructions.")
             
             if not typer.confirm("\nContinue anyway?", default=False):
                 raise typer.Exit(1)
@@ -247,7 +247,7 @@ def start(
     
     # Display startup info
     console.print(Panel.fit(
-        f"[bold green]WhOSSper Flow v{__version__}[/bold green]\n\n"
+        f"[bold green]WhOSSpr Flow v{__version__}[/bold green]\n\n"
         f"Model: [cyan]{config.whisper.model_size.value}[/cyan]\n"
         f"Language: [cyan]{config.whisper.language or 'auto'}[/cyan]\n"
         f"Device: [cyan]{config.whisper.device.value}[/cyan]\n"
@@ -277,7 +277,7 @@ def start(
 
 @app.command()
 def check() -> None:
-    """Check required permissions for WhOSSper.
+    """Check required permissions for WhOSSpr.
     
     Shows the status of required macOS permissions:
     - Microphone access (for recording audio)
@@ -285,7 +285,7 @@ def check() -> None:
     """
     console.print(Panel.fit(
         "[bold]Permission Check[/bold]",
-        title="WhOSSper Flow",
+        title="WhOSSpr Flow",
     ))
     
     perms = check_permissions()
@@ -336,7 +336,7 @@ def config(
     Use --init to create a new config file with defaults.
     """
     if init:
-        out_path = path or Path("whossper.json")
+        out_path = path or Path("whosspr.json")
         cfg = create_default_config()
         save_config(cfg, str(out_path))
         console.print(f"[green]Created config file:[/green] {out_path}")

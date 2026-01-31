@@ -1,4 +1,4 @@
-"""WhOSSper Text Enhancement - Optional LLM-based text improvement.
+"""WhOSSpr Text Enhancement - Optional LLM-based text improvement.
 
 This module provides optional text enhancement using OpenAI-compatible APIs.
 It improves transcribed speech by fixing grammar, punctuation, and formatting.

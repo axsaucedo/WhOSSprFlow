@@ -1,4 +1,4 @@
-We will build a clone of Whispr Flow called WhOSSper flow where the OSS is for open source.
+We will build a clone of Whispr Flow called WhOSSpr flow where the OSS is for open source.
 
 Namely this will be an application that allows users to convert speech to text in a convenient manner across their entire desktop experience.
 
