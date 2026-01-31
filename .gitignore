@@ -101,3 +101,4 @@ whossper.json
 .pytest_cache/
 htmlcov/
 .coverage
+.venv
