@@ -24,6 +24,9 @@ dev = [
     "pytest-cov>=4.0.0",
 ]
 
+[tool.hatch.build.targets.wheel]
+packages = ["whosspr"]
+
 [project.scripts]
 whosspr = "whosspr.cli:app"
 
